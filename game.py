@@ -9,7 +9,7 @@ pygame.init()
 screen=pygame.display.set_mode((widthW,heightW)) #Окно игры
 #Название окна
 pygame.display.set_caption("Slime's castle")
-#Здаю иконку игры(вверхе слева)
+#Задаю иконку игры(вверху слева)
 pygame.display.set_icon(pygame.image.load("image\icon\icon_slime.jpg"))
 #Clock нужен для того, чтобы убедиться, что игра работает с заданной частотой кадров
 clock=pygame.time.Clock()
