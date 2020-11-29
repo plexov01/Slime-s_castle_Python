@@ -29,3 +29,5 @@ while running:
     pygame.display.update()
 #При завершении цикла игры окно игры закрывается
 pygame.quit()
+
+#34589735
