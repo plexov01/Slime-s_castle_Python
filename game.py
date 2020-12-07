@@ -3,8 +3,8 @@ from pygame import * #Строчка,  чтобы каждый  раз не пи
 import slime #импорт кода, относящегося к слайму из другого файла
 import blocks #импорт кода, относящегося к описанию стен
 #Задаю ширину и высоту окна
-widthW=850
-heightW=600
+widthW=1920
+heightW=1080
 #Частота кадров в секунду
 FPS=60
 #Создаю игру и окно
@@ -17,8 +17,8 @@ pygame.display.set_icon(pygame.image.load("image\icon\icon_slime.jpg"))
 #Clock нужен для того, чтобы убедиться, что игра работает с заданной частотой кадров
 clock=pygame.time.Clock()
 
-# Создаю слайма
-slime=slime.Slime(700,100)
+# Создаю слайма и  задаю его начальное положение
+slime = slime.Slime(1750, 1350)
 left=right=False
 jump=False
 #Группируем все спрайты
@@ -30,18 +30,36 @@ entities.add(slime)
 
 #Создание пробного уровня(для отладки слайма)
 level=[
-    "-----------------",
-    "-               -",
-    "-               -",
-    "-               -",
-    "---------       -",
-    "-               -",
-    "-               -",
-    "-   -------------",
-    "-     -         -",
-    "-     -         -",
-    "-               -",
-    "-----------------"]
+    "-------------------------------------",
+    "-                                   -",
+    "-                                   -",
+    "-                                   -",
+    "---------                           -",
+    "-                                   -",
+    "-                                   -",
+    "-       -----------------------------",
+    "-                               --- -",
+    "-                                   -",
+    "-    ------                         -",
+    "-                                   -",
+    "-                                   -",
+    "-                          ----  ----",
+    "-                                   -",
+    "-        --------                   -",
+    "-                                   -",
+    "-                 -------------- ----",
+    "-                                   -",
+    "-                                   -",
+    "------------------------            -",
+    "-                                   -",
+    "-                          ----------",
+    "-                                   -",
+    "-   ---------------------------------",
+    "-     -                             -",
+    "-     -                             -",
+    "-                                   -",
+    "-------------------------------------"]
+
 
 # #Координаты для отрисовки пробного уровня
 x = y = 0
@@ -59,12 +77,50 @@ for line in level:
     y += 50
     x = 0
 
+#Класс для динамической камеры
+class  Camera:
+    def  __init__(self,cameraF,width,height):
+        self.cameraF=cameraF
+        self.levelRect=Rect(0,0,width,height)
+
+    def apply(self, target):
+        return target.rect.move(self.levelRect.topleft)
+
+    def update(self, target):
+        self.levelRect=self.cameraF(self.levelRect, target.rect)
+            
+        
+
+#Функция для камеры, которая будет отслеживать положение игрока
+def cameraF(camera, TargetRect):
+    #Определение координат  динамической камеры
+    l=-TargetRect.x+widthW/2
+    t=-TargetRect.y+heightW/2
+    
+    # # Для того, чтобы игрок не видел, что происходит за стенами уровня
+    # l=min(0,l)
+    # l=max(-(camera.width-widthW),l)
+
+    # t=max(-(camera.height-heightW),t)
+    # t=min(0,t)
+
+    return Rect(l, t, camera.width, camera.height)
+
+
+#Длина и ширина всего  уровня
+TotalWidth = len(level[0])*50
+TotalHeight = len(level)*50
+# Создаю  объект класса камера, для слежения за игроком
+camera=Camera(cameraF,TotalWidth,TotalHeight)
+
+
 #Цикл игры
 running=True
 while running:
     # держим цикл на правильной скорости
-    clock.tick(FPS) 
-    #Цикл для обнаружения нажатых клавиш игроком
+    clock.tick(FPS)
+
+    #Цикл для обработки нажатых клавиш игроком
     for event in pygame.event.get():
         #if для закрытия игры при нажатии на крестик
         if event.type==pygame.QUIT:
@@ -87,16 +143,17 @@ while running:
     #Заливка заднего фона чёрным цветом
     screen.fill(("#000000"))
 
-
-
-
     
-
-    #Отрисовка слайма
     slime.update(left,right,jump,platforms) #Для передвижения
-    entities.draw(screen) # Отрисовка всех спрайтов на нашем экране
 
-    #flip нужен для однократного показа всего, что нарисовано на экране за 1 кадр
+    #Добавляю слайма в цель отслеживания камеры
+    camera.update(slime)
+
+    #Отрисовываю все спрайты в области камеры
+    for e in entities:
+        screen.blit(e.image, camera.apply(e))
+
+    #display.update нужен для однократного показа всего, что нарисовано на экране за 1 кадр
     pygame.display.update()
 #При завершении цикла игры окно игры закрывается
 pygame.quit()

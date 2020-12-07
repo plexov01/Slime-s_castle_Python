@@ -1,16 +1,16 @@
 from pygame import *
 #Скорость движения слизня
-MoveSpeed=3 
+MoveSpeed=5
 #Сила прыжка
-jumpPower=7
+jumpPower=15
 #Гравитация(потом нужно подогнатьпод реальную)
 gravity=0.3
 
 
 #Ширина слизня
-widthS=65
+widthS=20
 #Высота слизня
-heightS=65
+heightS=20
 #Цвет слизня
 colorS="#3333FF"
 
