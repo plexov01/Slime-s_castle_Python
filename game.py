@@ -2,6 +2,15 @@ import pygame
 from pygame import * #Строчка,  чтобы каждый  раз не писать pygame
 import slime #импорт кода, относящегося к слайму из другого файла
 import blocks #импорт кода, относящегося к описанию стен
+# импорт mixer для  звука
+from pygame import mixer
+# Настройка звука
+mixer.pre_init(44100,-16,2,512)
+mixer.init()
+# #Звук для воспроизведения на фоне(найдём позже)
+# SoundJump=mixer.Sound('sounds/slime/jump.wav')
+# SoundJump.play(-1)
+
 #Задаю ширину и высоту окна
 widthW=1920
 heightW=1080

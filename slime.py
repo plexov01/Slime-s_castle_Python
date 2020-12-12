@@ -1,5 +1,7 @@
 from pygame import *
 import pyganim
+mixer.pre_init(44100, -16, 2, 512)
+mixer.init()
 #Скорость движения слизня
 MoveSpeed=5
 #Сила прыжка
@@ -46,6 +48,8 @@ class Slime(sprite.Sprite):
         self.rect=self.image.get_rect() #Прямоугольный объект, для отслеживания местанахождения слизня
         self.rect.x=x
         self.rect.y=y
+        # Закгрузка звука прыжка
+        self.SoundJump=mixer.Sound('sounds/slime/jump.wav')
         
         #Функциядля созданий списка анимаций
         def MakeFrameAnim(animWay,delay):
@@ -85,6 +89,7 @@ class Slime(sprite.Sprite):
         if jump:
             if self.onGround:
                 self.moveY=-jumpPower
+                self.SoundJump.play()
         if not self.onGround:
             self.moveY+=gravity
         # Чтобы всегда работала гравитация
