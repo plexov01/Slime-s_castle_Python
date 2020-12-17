@@ -2,6 +2,7 @@ import pygame
 from pygame import * #Строчка,  чтобы каждый  раз не писать pygame
 import slime #импорт кода, относящегося к слайму из другого файла
 import blocks #импорт кода, относящегося к описанию стен
+# import objects
 # импорт mixer для  звука
 from pygame import mixer
 # Настройка звука
@@ -13,7 +14,7 @@ mixer.init()
 
 #Задаю ширину и высоту окна
 widthW=1920
-heightW=1080
+heightW=1080 #1080
 #Частота кадров в секунду
 FPS=60
 #Создаю игру и окно
@@ -27,16 +28,20 @@ pygame.display.set_icon(pygame.image.load("image\icon\icon_slime.jpg"))
 clock=pygame.time.Clock()
 
 # Создаю слайма и  задаю его начальное положение
-slime = slime.Slime(1750, 1350)
+slime = slime.Slime(1750, 1400)
 left=right=False
 jump=False
+up=down=False
+#Для включения/выключения режима разработчика во время игры
+CHECK=False
 #Группируем все спрайты
 entities=pygame.sprite.Group()
 # Массив со всеми платформами, со всем во что будем врезаться
 platforms=[]
-# Добавим в slime в группу спрайтов
+# Добавим в slime в группу спрайтов  
 entities.add(slime)
-
+# entities.add(expl)
+# entities.add(portal)
 #Создание пробного уровня(для отладки слайма)
 level=[
     "----------------------------------------",
@@ -50,24 +55,24 @@ level=[
     "-                                  --- -",
     "-                                      -",
     "-    ------                            -",
-    "-                                      -",
-    "-                                      -",
-    "-                             ----  ----",
-    "-                                      -",
-    "-        --------                      -",
-    "-                                      -",
-    "-                 ----------------- ----",
-    "-                                      -",
-    "-                                      -",
-    "---------------------------            -",
-    "-                                      -",
-    "-                          -------------",
-    "-                                      -",
-    "-   ------------------------------------",
-    "-     -                                -",
-    "-     -                                -",
-    "-                                      -",
-    "----------------------------------------"]
+    "-                               -      -",
+    "--             ---              -      -",
+    "-                             ----  ---- -",
+    "-                                      - -",
+    "-   -    --------                      - -",
+    "-                                      - -",
+    "-                 ----------------- ---- -",
+    "-                                      - -",
+    "-                                      - -",
+    "---------------------------          - - -",
+    "-                                      - -",
+    "-                          ---------- -- -",
+    "-                                      - -",
+    "-   ---------------------------  ------- -",
+    "-     -                       -        - -",
+    "-     -                       -        - -",
+    "-                             -          -",
+    "------------------------------------------"]
 
 
 # #Координаты для отрисовки пробного уровня
@@ -141,6 +146,10 @@ while running:
             right=True
         if event.type==KEYDOWN and event.key==K_SPACE:
             jump=True
+        if event.type==KEYDOWN and event.key==K_w:
+            up=True
+        if event.type==KEYDOWN and event.key==K_s:
+            down=True
                 
         if event.type==KEYUP and event.key==K_a:
             left=False
@@ -148,12 +157,24 @@ while running:
             right=False
         if event.type==KEYUP and event.key==K_SPACE:
             jump=False
+        if event.type==KEYUP and event.key==K_w:
+            up=False
+        if event.type==KEYUP and event.key==K_s:
+            down=False
+
+
+        
+        #Для включения/выключения режима разработчика во время игры
+        if event.type==KEYDOWN and event.key==K_F1:
+            CHECK=True
+        if event.type==KEYDOWN and event.key==K_F2:
+            CHECK=False
 
     #Заливка заднего фона чёрным цветом
     screen.fill(("#000000"))
 
     
-    slime.update(left,right,jump,platforms) #Для передвижения
+    slime.update(left,right,up,down,jump,platforms,CHECK) #Для передвижения  и взаимодействия с игрой
 
     #Добавляю слайма в цель отслеживания камеры
     camera.update(slime)
