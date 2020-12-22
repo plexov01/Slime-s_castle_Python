@@ -164,34 +164,35 @@ class Slime(sprite.Sprite):
                 self.rect=self.image.get_rect()
                 # Устанавливаем изменённый rect по правильным координатам
                 self.rect.bottom=self.LastRectbottom
-                if self.Right:
-                    self.rect.right = self.LastRectRight
-                else:
-                    self.rect.x = self.LastRectx
+                self.rect.centerx=self.LastRectCenterx
+                # if self.Right:
+                #     self.rect.right = self.LastRectRight
+                # else:
+                #     self.rect.x = self.LastRectx
 
-
-        elif not self.onGround:
+        elif not self.onGround and not((self.Up and up) or  self.LeftPress or self.RightPress):
             if (self.rect.width != image.load('animation/slime/slimeJump1.png').get_width()) and (self.rect.height != image.load('animation/slime/slimeJump1.png').get_height()):
                 self.image = Surface((image.load('animation/slime/slimeJump1.png').get_width(), image.load('animation/slime/slimeJump1.png').get_height()))
                 # Обновляем  размер rect
                 self.rect = self.image.get_rect()
                 # Устанавливаем изменённый rect по правильным координатам
                 self.rect.bottom=self.LastRectbottom
-        
-                if self.Right:
-                    self.rect.right = self.LastRectRight
-                else:
-                    self.rect.x = self.LastRectx
+                self.rect.centerx=self.LastRectCenterx
+                # if self.Right:
+                #     self.rect.right = self.LastRectRight
+                # else:
+                #     self.rect.x = self.LastRectx
                 
-        if not self.onGround:
+        if not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
             self.moveY+=gravity
+
 
         if left:
             self.moveX=-MoveSpeed
             if self.onGround:
                 self.image.fill((0,0,0))
                 self.PALeft.blit(self.image,(0,0))
-            elif not self.onGround and not(self.LeftPress or self.RightPress or self.UpPress):
+            elif not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
                 self.image.fill((0, 0, 0))
                 self.PAJump.blit(self.image, (0, 0))
             if self.LeftPress:
@@ -216,6 +217,8 @@ class Slime(sprite.Sprite):
                     self.moveY=0
                     self.image.fill((0, 0, 0))
                     self.PAStayLeft.blit(self.image, (0, 0))
+                    
+
 
             
         if right:
@@ -223,7 +226,7 @@ class Slime(sprite.Sprite):
             if self.onGround:
                 self.image.fill((0, 0, 0))
                 self.PARight.blit(self.image, (0, 0))
-            elif not self.onGround and not(self.LeftPress or self.RightPress or self.UpPress):
+            elif not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
                 self.image.fill((0, 0, 0))
                 self.PAJump.blit(self.image, (0, 0))
 
@@ -254,7 +257,7 @@ class Slime(sprite.Sprite):
             if self.onGround:
                 self.image.fill((0, 0, 0))
                 self.PAStay.blit(self.image, (0, 0))
-            elif not self.onGround:
+            elif not self.onGround  and not((self.Up and up) or  self.LeftPress or self.RightPress):
                 self.image.fill((0, 0, 0))
                 self.PAJump.blit(self.image, (0, 0))
 
@@ -263,6 +266,29 @@ class Slime(sprite.Sprite):
                 self.moveY=-jumpPower
                 self.SoundJump.play()
         
+        if up:
+            if  self.Up:
+                self.moveY=0
+                if (self.rect.width!=image.load('animation/slime/slimeStayUp.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeStayUp.png').get_height()):
+                    self.image=Surface((image.load('animation/slime/slimeStayUp.png').get_width(), image.load('animation/slime/slimeStayUp.png').get_height()))
+                    self.rect=self.image.get_rect()
+                    self.rect.centerx=self.LastRectCenterx
+                    self.rect.y=self.LastRecty
+                if not(left  or right):
+                    self.moveX=0
+                    self.image.fill((0,0,0))
+                    self.PAStayUp.blit(self.image, (0,0))
+                if left:
+                    self.moveX=-MoveSpeed
+                    self.image.fill((0,0,0))
+                    self.PAUpLeft.blit(self.image,(0,0))
+                if right:
+                    self.moveX=MoveSpeed
+                    self.image.fill((0, 0, 0))
+                    self.PAUpRight.blit(self.image, (0,0))
+
+
+
         # if up:
         #     if self.UpPress:
         #         moveY=0
@@ -300,7 +326,7 @@ class Slime(sprite.Sprite):
         #             self.image.fill((0, 0, 0))
         #             self.PAStayUp.blit(self.image, (0, 0))  
         #         print("Up")
-
+        # print(self.UpPress or self.LeftPress or self.RightPress)
         #Проверка пересекается ли rect со стенами
         self.RectCheck(self.rect, platforms)
 
@@ -335,6 +361,7 @@ class Slime(sprite.Sprite):
         for each in platforms:
             # Если есть столкновение
             if sprite.collide_rect(self,each):
+                
                 if moveX>0:
                     self.rect.right=each.rect.left
                     self.RightPress=True
@@ -347,23 +374,51 @@ class Slime(sprite.Sprite):
                     self.onGround=True
                 if moveY<0:
                     self.rect.top=each.rect.bottom
-                    self.moveY=1
-                    self.UpPress=True
+                    # self.UpPress=True
+                    self.moveY=0
+                
             if (self.rect.right==each.rect.left):
                 self.Right=True
             if (self.rect.left==each.rect.right):
                 self.Left=True
+            if (self.rect.top == each.rect.bottom) and (self.rect.centerx+1>=each.rect.left  and self.rect.centerx-1<=each.rect.right):
+                self.Up=True
 
+
+# (self.rect.centerx >= each.rect.left and self.rect.centerx <= each.rect.right)
+# ((self.rect.x<=each.rect.right and self.rect.x>=each.rect.left) or (self.rect.right<=each.rect.right and self.rect.right>=each.rect.left))
     def RectCheck(self,LastRect,platforms):
         #Если есть пересечение с платформами,  то передвигаем слайма в нужную сторону
         for each in platforms:
             if each.rect.collidepoint(LastRect.right-1,LastRect.centery):
                 while each.rect.collidepoint(LastRect.right, LastRect.centery):
                     LastRect.x-=1
-            
+
+            if each.rect.collidepoint(LastRect.centerx, LastRect.top):
+                while each.rect.collidepoint(LastRect.centerx, LastRect.top):
+                    LastRect.y += 1
+
+            if each.rect.collidepoint(LastRect.x, LastRect.top+1):
+                while each.rect.collidepoint(LastRect.x, LastRect.top+1):
+                    LastRect.x += 1
+                    # print("LastRect.left, LastRect.top+1")
+
+            if each.rect.collidepoint(LastRect.left, LastRect.bottom-1):
+                while each.rect.collidepoint(LastRect.left, LastRect.bottom-1):
+                    LastRect.x += 1
+
             if each.rect.collidepoint(LastRect.right-1, LastRect.top):
                 while each.rect.collidepoint(LastRect.right-1, LastRect.top):
                     LastRect.y+=1
+
+            if each.rect.collidepoint(LastRect.x, LastRect.top):
+                while each.rect.collidepoint(LastRect.x, LastRect.top):
+                    LastRect.y+=1
+            
+            
+
+            
+                
 
             if LastRect.collidepoint(each.rect.x,each.rect.top):
                 while LastRect.collidepoint(each.rect.x,each.rect.top):
@@ -372,9 +427,3 @@ class Slime(sprite.Sprite):
             if LastRect.collidepoint(each.rect.x, each.rect.bottom-1):
                 while LastRect.collidepoint(each.rect.x, each.rect.bottom-1):
                     LastRect.x -= 1
-
-
-
-
-
-

@@ -14,9 +14,9 @@ mixer.init()
 
 #Задаю ширину и высоту окна
 widthW=1920
-heightW=1080 #1080
+heightW=700 #1080
 #Частота кадров в секунду
-FPS=60
+FPS=60   
 #Создаю игру и окно
 pygame.init()
 screen=pygame.display.set_mode((widthW,heightW)) #Окно игры
@@ -187,3 +187,4 @@ while running:
     pygame.display.update()
 #При завершении цикла игры окно игры закрывается
 pygame.quit()
+# sys.exit()
