@@ -183,7 +183,8 @@ class Slime(sprite.Sprite):
                 # else:
                 #     self.rect.x = self.LastRectx
                 
-        if not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
+        # and not((self.Up and up) or self.LeftPress or self.RightPress)
+        if not self.onGround:
             self.moveY+=gravity
 
 
