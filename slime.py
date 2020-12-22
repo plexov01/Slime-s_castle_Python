@@ -266,26 +266,26 @@ class Slime(sprite.Sprite):
                 self.moveY=-jumpPower
                 self.SoundJump.play()
         
-        if up:
-            if  self.Up:
-                self.moveY=0
-                if (self.rect.width!=image.load('animation/slime/slimeStayUp.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeStayUp.png').get_height()):
-                    self.image=Surface((image.load('animation/slime/slimeStayUp.png').get_width(), image.load('animation/slime/slimeStayUp.png').get_height()))
-                    self.rect=self.image.get_rect()
-                    self.rect.centerx=self.LastRectCenterx
-                    self.rect.y=self.LastRecty
-                if not(left  or right):
-                    self.moveX=0
-                    self.image.fill((0,0,0))
-                    self.PAStayUp.blit(self.image, (0,0))
-                if left:
-                    self.moveX=-MoveSpeed
-                    self.image.fill((0,0,0))
-                    self.PAUpLeft.blit(self.image,(0,0))
-                if right:
-                    self.moveX=MoveSpeed
-                    self.image.fill((0, 0, 0))
-                    self.PAUpRight.blit(self.image, (0,0))
+        # if up:
+        #     if  self.Up:
+        #         self.moveY=0
+        #         if (self.rect.width!=image.load('animation/slime/slimeStayUp.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeStayUp.png').get_height()):
+        #             self.image=Surface((image.load('animation/slime/slimeStayUp.png').get_width(), image.load('animation/slime/slimeStayUp.png').get_height()))
+        #             self.rect=self.image.get_rect()
+        #             self.rect.centerx=self.LastRectCenterx
+        #             self.rect.y=self.LastRecty
+        #         if not(left  or right):
+        #             self.moveX=0
+        #             self.image.fill((0,0,0))
+        #             self.PAStayUp.blit(self.image, (0,0))
+        #         if left:
+        #             self.moveX=-MoveSpeed
+        #             self.image.fill((0,0,0))
+        #             self.PAUpLeft.blit(self.image,(0,0))
+        #         if right:
+        #             self.moveX=MoveSpeed
+        #             self.image.fill((0, 0, 0))
+        #             self.PAUpRight.blit(self.image, (0,0))
 
 
 
