@@ -37,6 +37,12 @@ pygame.display.set_icon(pygame.image.load("image\icon\icon_slime.jpg"))
 #Clock нужен для того, чтобы убедиться, что игра работает с заданной частотой кадров
 clock=pygame.time.Clock()
 
+fontObj = pygame.font.Font('freesansbold.ttf', 50)
+textSurfaceObj = fontObj.render('Win!', True, (20,30,40))
+textRectObj = textSurfaceObj.get_rect()
+textRectObj.center = (widthW//2, heightW//2)
+deadSurFaceObj = fontObj.render('Dead!', True, (20,30,40)) 
+
 #меню
 class Menu:
     def __init__(self, volume, punkts=[120, 140, u'Punkt', (250, 250, 30), (250, 30, 250), 0]):
@@ -181,6 +187,10 @@ CHECK=False
 entities=pygame.sprite.Group()
 # Массив со всеми платформами, со всем во что будем врезаться
 platforms=[]
+# Массив с die блоками, от которых будем умирать
+dieblocks=[]
+#телепорты
+teleports=[]
 # Добавим в slime в группу спрайтов  
 entities.add(slime)
 # entities.add(expl)
@@ -189,9 +199,9 @@ entities.add(slime)
 level1=[
     "----------------------------------------",
     "-                                      -",
-    "-                                      -",
-    "-                                      -",
-    "---------                              -",
+    "-$                                      -",
+    "--++---++-                             -",
+    "----------                             -",
     "-                                      -",
     "-                                      -",
     "-       --------------------------------",
@@ -208,9 +218,9 @@ level1=[
     "-                                      - -",
     "-                                      - -",
     "---------------------------          - - -        -       ",
-    "-                                      - -                ",
+    "-                                      - -           $    ",
     "-                          ---------- -- -           -    ",
-    "-                                      - -                ",
+    "-      $                               - -                ",
     "-   ---------------------------- ------- -       -        ",
     "-     -                       -          -                ",
     "-     -                       -          -           -    ",
@@ -230,6 +240,27 @@ for line in level1:
             entities.add(pf)
             # Добавляем в массив объектов, с которыми можно сталкиваться
             platforms.append(pf)
+        elif col == "*":
+            # Создаём экземпляр класса
+            pf = blocks.DieBlockLamp(x,y)
+            # Добавляем его к группе спрайтов
+            entities.add(pf)
+            # Добавляем в массив объектов, от которых умираем
+            dieblocks.append(pf)
+        elif col == "+":
+            # Создаём экземпляр класса
+            pf = blocks.DieBlockLava(x,y)
+            # Добавляем его к группе спрайтов
+            entities.add(pf)
+            # Добавляем в массив объектов, от которых умираем
+            dieblocks.append(pf)
+        elif col == "$":
+            # Создаём экземпляр класса
+            pf = blocks.Teleport(x,y)
+            # Добавляем его к группе спрайтов
+            entities.add(pf)
+            # Добавляем в массив объектов, от которых умираем
+            teleports.append(pf)
         x += 50
     y += 50
     x = 0
@@ -321,7 +352,7 @@ while running:
     screen.fill(("#000000"))
 
     
-    slime.update(left,right,up,down,jump,platforms,CHECK) #Для передвижения  и взаимодействия с игрой
+    slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports) #Для передвижения  и взаимодействия с игрой
 
     #Добавляю слайма в цель отслеживания камеры
     camera.update(slime)
@@ -329,6 +360,14 @@ while running:
     #Отрисовываю все спрайты в области камеры
     for e in entities:
         screen.blit(e.image, camera.apply(e))
+    
+    if slime.win:
+        screen.fill((123,132,55))
+        screen.blit(textSurfaceObj, textRectObj)
+
+    if slime.dead:
+        screen.fill((123,132,55))
+        screen.blit(deadSurFaceObj, textRectObj)
 
     #display.update нужен для однократного показа всего, что нарисовано на экране за 1 кадр
     pygame.display.update()

@@ -93,6 +93,10 @@ class Slime(sprite.Sprite):
         self.UpPress=False
         #Как выглядит слизень
         self.image=Surface((widthS,heightS))
+        #Для создания победного окна
+        self.win = False
+        #Для смерти
+        self.dead = False
         
         self.rect=self.image.get_rect() #Прямоугольный объект, для отслеживания местанахождения слизня
         self.rect.x=x
@@ -153,10 +157,21 @@ class Slime(sprite.Sprite):
 
         self.PAUpLeft.play()
         self.PAUpRight.play()
+
+    def teleporting(self,goX, goY): #Функция для телепорта
+        self.rect.x = goX
+        self.rect.y = goY
+
+    def die(self): #Функция для смерти
+        time.wait(500)
+        self.teleporting(self.startX, self.startY) # перемещаемся в начальные координаты
+    
+    # def win(self):
+    #     time.wait(500)
         
 
     # Функция обновления слайма при нажатии клавиш
-    def update(self,left,right,up,down,jump,platforms,check):
+    def update(self,left,right,up,down,jump,platforms,check,dieblocks,teleports):
         if self.onGround:
             if (self.rect.width != widthS) and (self.rect.height != heightS):
                 self.image=Surface((widthS,heightS))
@@ -342,9 +357,9 @@ class Slime(sprite.Sprite):
         self.UpPress=False
         #Аналогично проделываем  результат с rect, добавляем взаимодействие rect с поверхностью
         self.rect.x+=self.moveX
-        self.collide(self.moveX,0,platforms) #Проверка пересечения по горизонтали
+        self.collide(self.moveX,0,platforms,dieblocks,teleports) #Проверка пересечения по горизонтали
         self.rect.y+=self.moveY 
-        self.collide(0,self.moveY,platforms) #Проверка пересечения по вертикали
+        self.collide(0,self.moveY,platforms,dieblocks,teleports) #Проверка пересечения по вертикали
         # Для того, чтобы можно было увидеть rect
         if  check:
             self.image.fill(('#FFFFFF'))
@@ -358,7 +373,7 @@ class Slime(sprite.Sprite):
         self.LastRectCenterx=self.rect.centerx
 
     # Функция обработки столкновений с препятствиями
-    def collide(self,moveX,moveY,platforms):
+    def collide(self,moveX,moveY,platforms,dieblocks,teleports):
         for each in platforms:
             # Если есть столкновение
             if sprite.collide_rect(self,each):
@@ -384,6 +399,13 @@ class Slime(sprite.Sprite):
                 self.Left=True
             if (self.rect.top == each.rect.bottom) and (self.rect.centerx+1>=each.rect.left  and self.rect.centerx-1<=each.rect.right):
                 self.Up=True
+        for each in dieblocks:
+            if sprite.collide_rect(self,each): # если пересакаемый блок - blocks.BlockDie
+                self.dead = True
+                Slime.die(self)# умираем
+        for each in teleports:
+            if sprite.collide_rect(self,each): # если пересакаемый блок - телепорт
+                self.win = True
 
 
 # (self.rect.centerx >= each.rect.left and self.rect.centerx <= each.rect.right)
