@@ -69,7 +69,7 @@ widthS=image.load('animation/slime/stay0.png').get_width()
 #Высота слизня
 heightS=image.load('animation/slime/stay0.png').get_height()
 #Цвет слизня
-colorS="#3333FF"
+colorS="#888888"
 
 class Slime(sprite.Sprite):
     #Конструктор
@@ -171,12 +171,14 @@ class Slime(sprite.Sprite):
         
 
     # Функция обновления слайма при нажатии клавиш
-    def update(self,left,right,up,down,jump,platforms,check,dieblocks,teleports):
+    def update(self,left,right,up,down,jump,platforms,check,dieblocks,teleports,mon):
         if self.onGround:
             if (self.rect.width != widthS) and (self.rect.height != heightS):
                 self.image=Surface((widthS,heightS))
                 # Обновляем  размер rect
                 self.rect=self.image.get_rect()
+                self.image.fill(Color(colorS))
+                self.image.set_colorkey(Color(colorS))
                 # Устанавливаем изменённый rect по правильным координатам
                 self.rect.bottom=self.LastRectbottom
                 self.rect.centerx=self.LastRectCenterx
@@ -206,10 +208,12 @@ class Slime(sprite.Sprite):
         if left:
             self.moveX=-MoveSpeed
             if self.onGround:
-                self.image.fill((0,0,0))
+                self.image.fill(colorS)
+                self.image.set_colorkey(Color(colorS))
                 self.PALeft.blit(self.image,(0,0))
             elif not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
-                self.image.fill((0, 0, 0))
+                self.image.fill(colorS)
+                self.image.set_colorkey(Color(colorS))
                 self.PAJump.blit(self.image, (0, 0))
             if self.LeftPress:
                 if (self.rect.width!=image.load('animation/slime/slimeLeftUp1.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeLeftUp1.png').get_height()):
@@ -222,16 +226,19 @@ class Slime(sprite.Sprite):
                     self.rect.bottom=self.LastRectbottom
                 if up:
                     self.moveY=-MoveSpeed
-                    self.image.fill((0,0,0))
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
                     self.PALeftUp.blit(self.image,(0,0))
                 if down:
                     self.moveY=+MoveSpeed
-                    self.image.fill((0, 0, 0))
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
                     self.PALeftDown.blit(self.image, (0, 0))
                 
                 if not(up or down):
                     self.moveY=0
-                    self.image.fill((0, 0, 0))
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
                     self.PAStayLeft.blit(self.image, (0, 0))
                     
 
@@ -240,10 +247,12 @@ class Slime(sprite.Sprite):
         if right:
             self.moveX=+MoveSpeed
             if self.onGround:
-                self.image.fill((0, 0, 0))
+                self.image.fill(colorS)
+                self.image.set_colorkey(Color(colorS))
                 self.PARight.blit(self.image, (0, 0))
             elif not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
-                self.image.fill((0, 0, 0))
+                self.image.fill(colorS)
+                self.image.set_colorkey(Color(colorS))
                 self.PAJump.blit(self.image, (0, 0))
 
             if self.RightPress:
@@ -256,25 +265,30 @@ class Slime(sprite.Sprite):
 
                 if up:
                     self.moveY=-MoveSpeed
-                    self.image.fill((0,0,0))
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
                     self.PARightUp.blit(self.image,(0,0))
                 if down:
                     self.moveY=+MoveSpeed
-                    self.image.fill((0, 0, 0))
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
                     self.PARightDown.blit(self.image, (0, 0))
                 
                 if not(up or down):
                     self.moveY=0
-                    self.image.fill((0, 0, 0))
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
                     self.PAStayRight.blit(self.image, (0, 0))
                 
         if not(left or right):
             self.moveX=0
             if self.onGround:
-                self.image.fill((0, 0, 0))
+                self.image.fill(colorS)
+                self.image.set_colorkey(Color(colorS))
                 self.PAStay.blit(self.image, (0, 0))
             elif not self.onGround  and not((self.Up and up) or  self.LeftPress or self.RightPress):
-                self.image.fill((0, 0, 0))
+                self.image.fill(colorS)
+                self.image.set_colorkey(Color(colorS))
                 self.PAJump.blit(self.image, (0, 0))
 
         if jump:
@@ -357,9 +371,9 @@ class Slime(sprite.Sprite):
         self.UpPress=False
         #Аналогично проделываем  результат с rect, добавляем взаимодействие rect с поверхностью
         self.rect.x+=self.moveX
-        self.collide(self.moveX,0,platforms,dieblocks,teleports) #Проверка пересечения по горизонтали
+        self.collide(self.moveX,0,platforms,dieblocks,teleports,mon) #Проверка пересечения по горизонтали
         self.rect.y+=self.moveY 
-        self.collide(0,self.moveY,platforms,dieblocks,teleports) #Проверка пересечения по вертикали
+        self.collide(0,self.moveY,platforms,dieblocks,teleports,mon) #Проверка пересечения по вертикали
         # Для того, чтобы можно было увидеть rect
         if  check:
             self.image.fill(('#FFFFFF'))
@@ -373,7 +387,7 @@ class Slime(sprite.Sprite):
         self.LastRectCenterx=self.rect.centerx
 
     # Функция обработки столкновений с препятствиями
-    def collide(self,moveX,moveY,platforms,dieblocks,teleports):
+    def collide(self,moveX,moveY,platforms,dieblocks,teleports,mon):
         for each in platforms:
             # Если есть столкновение
             if sprite.collide_rect(self,each):
@@ -406,7 +420,10 @@ class Slime(sprite.Sprite):
         for each in teleports:
             if sprite.collide_rect(self,each): # если пересакаемый блок - телепорт
                 self.win = True
-
+        for each in mon:
+            if sprite.collide_rect(self,each): # если пересакаемый монстра
+                self.dead=True
+                Slime.die(self)# умираем
 
 # (self.rect.centerx >= each.rect.left and self.rect.centerx <= each.rect.right)
 # ((self.rect.x<=each.rect.right and self.rect.x>=each.rect.left) or (self.rect.right<=each.rect.right and self.rect.right>=each.rect.left))

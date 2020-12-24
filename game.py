@@ -1,6 +1,8 @@
 # Frozen Jam by tgfcoder <https://twitter.com/tgfcoder> licensed under CC-BY-3 <http://creativecommons.org/licenses/by/3.0/>
 import pygame
 import sys
+import monster #Импорт кода для монстра
+import fire #Импорт кода для огня
 from pygame import * #Строчка,  чтобы каждый  раз не писать pygame
 import slime #импорт кода, относящегося к слайму из другого файла
 import blocks #импорт кода, относящегося к описанию стен
@@ -33,7 +35,7 @@ screen=pygame.display.set_mode((widthW,heightW)) #Окно игры
 #Название окна
 pygame.display.set_caption("Slime's castle")
 #Задаю иконку игры(вверху слева)
-pygame.display.set_icon(pygame.image.load("image\icon\icon_slime.jpg"))
+pygame.display.set_icon(pygame.image.load("image/icon/icon_slime.jpg"))
 #Clock нужен для того, чтобы убедиться, что игра работает с заданной частотой кадров
 clock=pygame.time.Clock()
 
@@ -177,7 +179,7 @@ game = Menu(volume,punkts)
 game.menu()
 
 # Создаю слайма и  задаю его начальное положение
-slime = slime.Slime(1750, 1400)
+slime = slime.Slime(160, 1360)
 left=right=False
 jump=False
 up=down=False
@@ -193,38 +195,46 @@ dieblocks=[]
 teleports=[]
 # Добавим в slime в группу спрайтов  
 entities.add(slime)
+bg_blocks = [] #Блоки заднего фона
+#Группа и массив монстров
+mon=[]
+fires=pygame.sprite.Group() #Огоньки
+# Добавим в slime в группу спрайтов 
+animatedEntities = pygame.sprite.Group() # все анимированные объекты, за исключением героя 
+# entities.add(expl)
+monsters = pygame.sprite.Group() # Все передвигающиеся объекты
 # entities.add(expl)
 # entities.add(portal)
 #Создание пробного уровня(для отладки слайма)
 level1=[
-    "----------------------------------------",
-    "-                                      -",
-    "-$                                      -",
-    "--++---++-                             -",
-    "----------                             -",
-    "-                                      -",
-    "-                                      -",
-    "-       --------------------------------",
-    "-                                  --- -",
-    "-                                      -",
-    "-    ------                            -",
-    "-                               -      -",
-    "--             ---              -      -",
-    "-                             ----  ---- -",
-    "-                                      - -",
-    "-   -    --------                      - -",
-    "-                                      - -",
-    "-                 ----------------- ---- -",
-    "-                                      - -",
-    "-                                      - -",
-    "---------------------------          - - -        -       ",
-    "-                                      - -           $    ",
-    "-                          ---------- -- -           -    ",
-    "-      $                               - -                ",
-    "-   ---------------------------- ------- -       -        ",
-    "-     -                       -          -                ",
-    "-     -                       -          -           -    ",
-    "-                             -          -       -        ",
+    "----------------------------------------------------------",
+    "-                                                        -",
+    "-                                                        -",
+    "-                                                        -",
+    "-   -             *          **       ***              $ -",
+    "--- - ----------------------------------------------------",
+    "-   -    -                                               -",
+    "-   -                                                    -",
+    "-   -+                                                   -",
+    "-   -   -                                      -         -",
+    "-   -                 *                                  -",
+    "-           -        --         -                   -    -",
+    "-                        --    *     --                  -",
+    "-     -                        -           -           - -",
+    "-            --                    -    -           -    -",
+    "-++++++++++++++++++++++++++-                        -    -",
+    "----------------------------                       -+    -",
+    "-                                                   -    -",
+    "-                                                   -    -",
+    "-                                                        -",
+    "-                                                       --",
+    "-                                                        -",
+    "-                                        -           -   -",
+    "-                                        -               -",
+    "-                                        -               -",
+    "-                                        -               -",
+    "-                    -      -     *      -        -      -",
+    "-          -         -++++++-     -      -+++++++++++++++-",
     "----------------------------------------------------------"]
 
 
@@ -242,9 +252,12 @@ for line in level1:
             platforms.append(pf)
         elif col == "*":
             # Создаём экземпляр класса
-            pf = blocks.DieBlockLamp(x,y)
+            pf = fire.Fire(x,y)
             # Добавляем его к группе спрайтов
+            bg = blocks.Background(x,y)
             entities.add(pf)
+            fires.add(pf)
+            bg_blocks.append(bg)
             # Добавляем в массив объектов, от которых умираем
             dieblocks.append(pf)
         elif col == "+":
@@ -261,10 +274,19 @@ for line in level1:
             entities.add(pf)
             # Добавляем в массив объектов, от которых умираем
             teleports.append(pf)
+            bg = blocks.Background(x,y)
+            bg_blocks.append(bg)
+        else:
+            bg = blocks.Background(x,y)
+            bg_blocks.append(bg)
         x += 50
     y += 50
     x = 0
-
+#Добавим монстра
+mn = monster.Monster(760,1324,1.3,0.2,150,6) #Создаем монстра
+entities.add(mn)
+monsters.add(mn)
+mon.append(mn)
 #Класс для динамической камеры
 class  Camera:
     def  __init__(self,cameraF,width,height):
@@ -352,10 +374,14 @@ while running:
     screen.fill(("#000000"))
 
     
-    slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports) #Для передвижения  и взаимодействия с игрой
-
+    slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports,mon) #Для передвижения  и взаимодействия с игрой
+    monsters.update() #Рисуем монстра
+    fires.update() #Рисуем огни
     #Добавляю слайма в цель отслеживания камеры
     camera.update(slime)
+
+    for e in bg_blocks:
+        screen.blit(e.image, camera.apply(e))
 
     #Отрисовываю все спрайты в области камеры
     for e in entities:
