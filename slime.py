@@ -7,10 +7,10 @@ MoveSpeed=5
 #Сила прыжка
 jumpPower=11
 #Гравитация(потом нужно подогнать под реальную)
-gravity=0.3
+gravity=0.35
 #Задержка анимации
 AnimationDelay=0.1
-AnStay=['animation/slime/stay0.png']
+AnStay=['animation/slime/stay.png']
 
 AnStayLeft = ['animation/slime/slimeStayLeft.png']
 
@@ -65,11 +65,11 @@ AnUpRight = ['animation/slime/slimeUpRight1.png',
              'animation/slime/slimeUpRight4.png']
 
 #Ширина слизня
-widthS=image.load('animation/slime/stay0.png').get_width()
+widthS=image.load('animation/slime/stay.png').get_width()
 #Высота слизня
-heightS=image.load('animation/slime/stay0.png').get_height()
+heightS=image.load('animation/slime/stay.png').get_height()
 #Цвет слизня
-colorS="#888888"
+colorS="#444444"
 
 class Slime(sprite.Sprite):
     #Конструктор

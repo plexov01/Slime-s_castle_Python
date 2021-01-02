@@ -1,12 +1,16 @@
 # Frozen Jam by tgfcoder <https://twitter.com/tgfcoder> licensed under CC-BY-3 <http://creativecommons.org/licenses/by/3.0/>
 import pygame
 import sys
-import monster #Импорт кода для монстра
-import fire #Импорт кода для огня
+import enemies  # Импорт кода для монстра
+# import fire #Импорт кода для огня
 from pygame import * #Строчка,  чтобы каждый  раз не писать pygame
 import slime #импорт кода, относящегося к слайму из другого файла
 import blocks #импорт кода, относящегося к описанию стен
-# import objects
+import objects
+# import menu
+# import options
+
+
 # импорт mixer для  звука
 # from pygame import mixer
 # Настройка звука
@@ -16,26 +20,35 @@ mixer.init()
 music = mixer.Sound("music/background_music.ogg")
 music.play(-1)
 #Громкость
-volume=0.3
+volume=0#0.3
 music.set_volume(volume)
 #инициализация стилей
 pygame.font.init()
 # #Звук для воспроизведения на фоне(найдём позже)
 # SoundJump=mixer.Sound('sounds/slime/jump.wav')
 # SoundJump.play(-1)
+from menu import Menu,punkts
 
 #Задаю ширину и высоту окна
-widthW=1920
+widthW=1920#1000
 heightW=1080 #1080
 #Частота кадров в секунду
 FPS=60   
 #Создаю игру и окно
 pygame.init()
-screen=pygame.display.set_mode((widthW,heightW)) #Окно игры
+screen = pygame.display.set_mode((widthW, heightW), SCALED|FULLSCREEN)  # Окно игры
+
+# pygame.FULLSCREEN – полноэкранный режим
+# pygame.DOUBLEBUF – двойная буферизация(рекомендуется при совместном использовании HWSURFACE или OPENGL)
+# pygame.HWSURFACE – аппаратное ускорение отрисовки(только для режима FULLSCREEN)
+# pygame.OPENGL – обработка отображений  с помощью библиотеки OpenGL
+# pygame.RESIZABLE – окно с изменяемыми размерами
+# pygame.NOFRAME – окно без рамки и заголовка
+# pygame.SCALED – разрешение, зависящее от размеров рабочего стола.
 #Название окна
 pygame.display.set_caption("Slime's castle")
 #Задаю иконку игры(вверху слева)
-pygame.display.set_icon(pygame.image.load("image/icon/icon_slime.jpg"))
+pygame.display.set_icon(pygame.image.load("image/icon/icon_slime.ico"))
 #Clock нужен для того, чтобы убедиться, что игра работает с заданной частотой кадров
 clock=pygame.time.Clock()
 
@@ -45,138 +58,10 @@ textRectObj = textSurfaceObj.get_rect()
 textRectObj.center = (widthW//2, heightW//2)
 deadSurFaceObj = fontObj.render('Dead!', True, (20,30,40)) 
 
-#меню
-class Menu:
-    def __init__(self, volume, punkts=[120, 140, u'Punkt', (250, 250, 30), (250, 30, 250), 0]):
-        self.punkts = punkts
-        self.volume=volume
-
-    def render(self, pover, font, num):
-        for i in self.punkts:
-            if num == i[5]:
-                pover.blit(font.render(i[2], 1, i[4]), (i[0], i[1]))
-            else:
-                pover.blit(font.render(i[2], 1, i[3]), (i[0], i[1]))
-
-    def menu(self):
-        done = True
-        font_menu = pygame.font.SysFont('ubuntu', 88)
-        punkt = 0
-        while done:
-            screen.fill((0, 100, 200))
-
-            mp = pygame.mouse.get_pos()
-            for i in self.punkts:
-                if mp[0] > i[0] and mp[0] < i[0]+155 and mp[1] > i[1] and mp[1] < i[1]+90:
-                    punkt = i[5]
-            self.render(screen, font_menu, punkt)
-
-            for c in pygame.event.get():
-                if c.type == pygame.QUIT:
-                    done = False
-                    pygame.quit()
-                    sys.exit()
-                if c.type == pygame.KEYDOWN:
-                    if c.key == pygame.K_ESCAPE:
-                        done = False
-                        pygame.quit()
-                        sys.exit()
-                    if c.key == pygame.K_UP:
-                        if punkt > 0:
-                            punkt -= 1
-                    if c.key == pygame.K_DOWN:
-                        if punkt < len(self.punkts)-1:
-                            punkt += 1
-                if c.type == pygame.MOUSEBUTTONDOWN and c.button == 1:
-                    if punkt == 1:
-                        done == False
-                        game = Options(volume,punkts1)
-                        game.options()
-                    if punkt == 0:
-                        done = False
-                    elif punkt == 2:
-                        done = False
-                        pygame.quit()
-                        sys.exit()
-
-            pygame.display.flip()
             
-#настройки
-class Options:
-    def __init__(self,volume, punkts1=[120, 140, u'Punkt1', (250, 250, 30), (250, 30, 250), 0]):
-        self.punkts1 = punkts1
-        self.volume=volume
 
-    def render(self, pover, font, num):
-        for i in self.punkts1:
-            if num == i[5]:
-                pover.blit(font.render(i[2], 1, i[4]), (i[0], i[1]))
-            else:
-                pover.blit(font.render(i[2], 1, i[3]), (i[0], i[1]))
-
-    def options(self):
-        done = True
-        font_options = pygame.font.SysFont('ubuntu', 88)
-        punkt1 = 0
-        while done:
-            screen.fill((0, 100, 200))
-
-            mp = pygame.mouse.get_pos()
-            for i in self.punkts1:
-                if mp[0] > i[0] and mp[0] < i[0]+155 and mp[1] > i[1] and mp[1] < i[1]+90:
-                    punkt1 = i[5]
-            self.render(screen, font_options, punkt1)
-            for c in pygame.event.get():
-                if c.type == pygame.QUIT:
-                    done = False
-                    pygame.quit()
-                    sys.exit()
-                if c.type == pygame.KEYDOWN:
-                    if c.key == pygame.K_ESCAPE:
-                        done = False
-                        pygame.quit()
-                        sys.exit()
-                    if c.key == pygame.K_UP:
-                        if punkt1 > 0:
-                            punkt -= 1
-                    if c.key == pygame.K_DOWN:
-                        if punkt1 < len(self.punkts)-1:
-                            punkt1 += 1
-                if c.type == pygame.MOUSEBUTTONDOWN:
-                    if punkt1 == 1:
-                        if self.volume>1:
-                            self.volume=1
-                        else:
-                            self.volume+=0.1         
-                                       
-                        music.set_volume(self.volume)
-
-                    if punkt1 == 0:
-                        done = False
-                        game.menu()
-                    elif punkt1 == 2:
-
-                        if self.volume < 0:
-                            self.volume = 0
-                        else:
-                            self.volume -= 0.1
-
-                        music.set_volume(self.volume)
-
-
-            pygame.display.flip()
-
-
-#создаем настройки
-punkts1 = [(200, 890, u'Back', (250, 250, 30), (250, 30, 250), 0),
-           (810, 490, u'+', (250, 250, 30), (250, 30, 250), 1),
-           (900, 490, u'-', (250, 250, 30), (250, 30, 250), 2)]
-#создаем меню
-punkts = [(810, 390, u'Game', (250, 250, 30), (250, 30, 250), 0),
-          (810, 490, u'Options', (250, 250, 30), (250, 30, 250), 1),
-          (810, 590, u'Quit', (250, 250, 30), (250, 30, 250), 2)]
-game = Menu(volume,punkts)
-game.menu()
+Menu = Menu(volume,music,punkts)
+# Menu.MenuProcessing()
 
 # Создаю слайма и  задаю его начальное положение
 slime = slime.Slime(160, 1360)
@@ -185,6 +70,7 @@ jump=False
 up=down=False
 #Для включения/выключения режима разработчика во время игры
 CHECK=False
+
 #Группируем все спрайты
 entities=pygame.sprite.Group()
 # Массив со всеми платформами, со всем во что будем врезаться
@@ -219,7 +105,7 @@ level1=[
     "-   -   -                                      -         -",
     "-   -                 *                                  -",
     "-           -        --         -                   -    -",
-    "-                        --    *     --                  -",
+    "-                        --    *     --             -    -",
     "-     -                        -           -           - -",
     "-            --                    -    -           -    -",
     "-++++++++++++++++++++++++++-                        -    -",
@@ -252,7 +138,7 @@ for line in level1:
             platforms.append(pf)
         elif col == "*":
             # Создаём экземпляр класса
-            pf = fire.Fire(x,y)
+            pf = objects.Fire(x,y)
             # Добавляем его к группе спрайтов
             bg = blocks.Background(x,y)
             entities.add(pf)
@@ -283,7 +169,7 @@ for line in level1:
     y += 50
     x = 0
 #Добавим монстра
-mn = monster.Monster(760,1324,1.3,0.2,150,6) #Создаем монстра
+mn = enemies.Monster(760, 1324, 1.3, 0.2, 150, 6)  # Создаем монстра
 entities.add(mn)
 monsters.add(mn)
 mon.append(mn)
@@ -375,8 +261,10 @@ while running:
 
     
     slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports,mon) #Для передвижения  и взаимодействия с игрой
+
     monsters.update() #Рисуем монстра
     fires.update() #Рисуем огни
+
     #Добавляю слайма в цель отслеживания камеры
     camera.update(slime)
 
@@ -387,14 +275,14 @@ while running:
     for e in entities:
         screen.blit(e.image, camera.apply(e))
     
-    if slime.win:
-        screen.fill((123,132,55))
-        screen.blit(textSurfaceObj, textRectObj)
+    # if slime.win:
+    #     screen.fill((123,132,55))
+    #     screen.blit(textSurfaceObj, textRectObj)
 
-    if slime.dead:
-        screen.fill((123,132,55))
-        screen.blit(deadSurFaceObj, textRectObj)
-
+    # if slime.dead:
+    #     screen.fill((123,132,55))
+    #     screen.blit(deadSurFaceObj, textRectObj)
+        
     #display.update нужен для однократного показа всего, что нарисовано на экране за 1 кадр
     pygame.display.update()
 #При завершении цикла игры окно игры закрывается
