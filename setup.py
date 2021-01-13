@@ -5,16 +5,26 @@ from cx_Freeze import setup, Executable
 
 includes=[
     'blocks',
-    'fire',
-    'monster',
+    'enemies',
+    'light',
     'pyganim',
-    'slime'
+    'slime',
+    'objects',
+    'options',
+    'menu',
+    'light',
+    'functions',
+    'HUD'
+
+
+
 ]
 include_files = ['animation',
                  'image',
                  'music',
                  'sounds',
-                 'C:/Users/Степан\AppData/Local/Programs/Python/Python39/python39.dll'
+                 'C:/Users/Степан\AppData/Local/Programs/Python/Python39/python39.dll',
+                 'effects'
 ]
 excludes = [ 'email', 'html', 'http'
 

@@ -90,8 +90,8 @@ import pyganim
 #         self.PAExpl.blit(self.image,(0,0))
 
 # Анимация огня
-FIRE_WIDTH = 48
-FIRE_HEIGHT = 53
+FIRE_WIDTH = image.load('animation/fireplace/fireplace1.png').get_width()
+FIRE_HEIGHT = image.load('animation/fireplace/fireplace1.png').get_height()
 FIRE_COLOR = "#888888"
 ANIMATION_FIRE = [
     ('animation/fireplace/fireplace1.png'),
@@ -108,7 +108,7 @@ class Fire(sprite.Sprite):
         sprite.Sprite.__init__(self)
         self.image = Surface((FIRE_WIDTH, FIRE_HEIGHT))
         self.image.fill(Color(FIRE_COLOR))
-        self.rect = Rect(x, y, FIRE_WIDTH, FIRE_HEIGHT)
+        self.rect = Rect(x+(50-FIRE_WIDTH)//2, y, FIRE_WIDTH, FIRE_HEIGHT)
         self.image.set_colorkey(Color(FIRE_COLOR))
         self.startX = x  # начальные координаты
         self.startY = y

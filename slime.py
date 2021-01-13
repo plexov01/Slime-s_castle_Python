@@ -93,6 +93,41 @@ class Slime(sprite.Sprite):
         self.UpPress=False
         #Как выглядит слизень
         self.image=Surface((widthS,heightS))
+        #Размеры слизня в зависимости от поеверхности
+        self.SizeGroundWidth=widthS
+        self.SizeGroundHeight=heightS
+
+        self.SizeByWallWidth=image.load('animation/slime/slimeLeftUp1.png').get_width()
+        self.SizeByWallHeight=image.load('animation/slime/slimeLeftUp1.png').get_height()
+
+        self.SizeJumpWidth=image.load('animation/slime/slimeJump1.png').get_width()
+        self.SizeJumpHeight=image.load('animation/slime/slimeJump1.png').get_height()
+        # Для выносливости
+        self.stamina=100 # Изменяется от 0 до 100
+        self.AllowIncrease=True # Переменная, которая разрешает востанавливать выносливость или запрещает
+        self.CheckTimeAllowIncrease=0 # Вспомогательная переменная, чтобы отслеживать время, в течении которого запрещено востанавливать выносливость
+        self.ForbidIncreaseTime=2000 # Сколько по времени будет запрещено восстанавливать выносливостьв милисекундах
+
+        self.IncreaseStamina=1.5 #Увеличение выносливости
+        self.DecreaseStaminaUp=5 #Уменьшение выносливости на потолке
+        self.DecreaseStaminaUpStand = 3  # Уменьшение выносливости на потолке, когда слизень не двигается
+        self.DecreaseStaminaWall=2 # Уменьшение на стене, когда слизень двигается
+        self.DecreaseStaminaJump=30 # Уменьшение выносливости при прыжке
+        self.DecreaseStaminaWallStand=1.5 # Уменьшение выносливости на стене, когда слизень не двигается
+        self.CurrentTime=time.get_ticks()
+
+        self.CheckTimeIncrease=0 #Вспомогательная переменная, чтобы увеличивать выносливость через какой-то промежуток времени
+        self.CheckTimeDecrease=0 #Вспомогательная переменная, чтобы увеличивать выносливость через какой-то промежуток времени
+        #Частоты увеличения и уменьшения выносливости в милисекундах(каждые сколько-то милисекунд)
+        self.RateIncrease=40
+        self.RateDecrease=60
+
+        self.CooldownCling = False  # Вспомогательная переменные, чтобы не давать слизню прилипать к стенам
+        # self.CooldownCheckTimeCling=500
+        self.CheckTimeCling=0
+        #Время в милисекундах сколько слизень не сможет прилипать к стенам, после полного исчерпания выносливости
+        self.CooldownClingTime=1000
+
         #Для создания победного окна
         self.win = False
         #Для смерти
@@ -108,6 +143,7 @@ class Slime(sprite.Sprite):
         self.LastRectRight=self.rect.right # Для  правой стены
         self.LastRectTop=self.rect.top
         self.LastRectCenterx=self.rect.centerx
+        self.LastRectCentery=self.rect.centery
         # Закгрузка звука прыжка
         self.SoundJump=mixer.Sound('sounds/slime/jump.wav')
         
@@ -163,16 +199,38 @@ class Slime(sprite.Sprite):
         self.rect.y = goY
 
     def die(self): #Функция для смерти
-        time.wait(500)
+        # time.wait(500)
         self.teleporting(self.startX, self.startY) # перемещаемся в начальные координаты
     
-    # def win(self):
-    #     time.wait(500)
+    def win(self):
+        self.teleporting(self.startX, self.startY) # перемещаемся в начальные координаты
         
 
     # Функция обновления слайма при нажатии клавиш
     def update(self,left,right,up,down,jump,platforms,check,dieblocks,teleports,mon):
+        self.CurrentTime=time.get_ticks()
+        # Проверка раз в секунду можем ли мы восстанавливать выносливость
+        if self.CurrentTime-self.CheckTimeAllowIncrease>1000 and not self.AllowIncrease:
+            
+            self.ForbidIncreaseTime-=1000
+            if self.ForbidIncreaseTime<=0:
+                self.ForbidIncreaseTime=0
+                self.AllowIncrease=True
+            self.CheckTimeAllowIncrease=time.get_ticks()
+        
+
+
+        # Если не прошёл кулдан на прилипание, то мы не можем прилипнуть к стенам
+        if self.CurrentTime-self.CheckTimeCling > self.CooldownClingTime and self.CooldownCling:
+            self.CooldownCling=False
+            self.CheckTimeCling=time.get_ticks()
+
         if self.onGround:
+            if self.CurrentTime-self.CheckTimeIncrease > self.RateIncrease:
+                if self.AllowIncrease:
+                    self.stamina += self.IncreaseStamina*((self.CurrentTime-self.CheckTimeIncrease)/75+1)
+                self.CheckTimeIncrease = time.get_ticks()
+            
             if (self.rect.width != widthS) and (self.rect.height != heightS):
                 self.image=Surface((widthS,heightS))
                 # Обновляем  размер rect
@@ -182,25 +240,23 @@ class Slime(sprite.Sprite):
                 # Устанавливаем изменённый rect по правильным координатам
                 self.rect.bottom=self.LastRectbottom
                 self.rect.centerx=self.LastRectCenterx
-                # if self.Right:
-                #     self.rect.right = self.LastRectRight
-                # else:
-                #     self.rect.x = self.LastRectx
 
-        elif not self.onGround and not((self.Up and up) or  self.LeftPress or self.RightPress):
-            if (self.rect.width != image.load('animation/slime/slimeJump1.png').get_width()) and (self.rect.height != image.load('animation/slime/slimeJump1.png').get_height()):
-                self.image = Surface((image.load('animation/slime/slimeJump1.png').get_width(), image.load('animation/slime/slimeJump1.png').get_height()))
+        elif not self.onGround and not((self.Up and up) or self.LeftPress or self.RightPress):
+            # Выносливость может востанавливаться, если она не кончилась в момент прилипания, если кончилась - то не будет востанавливаться, пока слизень опять не сможет прилипать ко стенам
+            if self.CurrentTime-self.CheckTimeIncrease > self.RateIncrease:
+                if self.AllowIncrease and not self.CooldownCling:
+                    self.stamina += self.IncreaseStamina
+                self.CheckTimeIncrease = time.get_ticks()
+
+            if (self.rect.width != self.SizeJumpWidth) and (self.rect.height != self.SizeJumpHeight):
+                self.image = Surface((self.SizeJumpWidth, self.SizeJumpHeight))
                 # Обновляем  размер rect
                 self.rect = self.image.get_rect()
                 # Устанавливаем изменённый rect по правильным координатам
-                self.rect.bottom=self.LastRectbottom
+                self.rect.centery=self.LastRectCentery
                 self.rect.centerx=self.LastRectCenterx
-                # if self.Right:
-                #     self.rect.right = self.LastRectRight
-                # else:
-                #     self.rect.x = self.LastRectx
+
                 
-        # and not((self.Up and up) or self.LeftPress or self.RightPress)
         if not self.onGround:
             self.moveY+=gravity
 
@@ -215,9 +271,9 @@ class Slime(sprite.Sprite):
                 self.image.fill(colorS)
                 self.image.set_colorkey(Color(colorS))
                 self.PAJump.blit(self.image, (0, 0))
-            if self.LeftPress:
-                if (self.rect.width!=image.load('animation/slime/slimeLeftUp1.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeLeftUp1.png').get_height()):
-                    self.image=Surface((image.load('animation/slime/slimeLeftUp1.png').get_width(), image.load('animation/slime/slimeLeftUp1.png').get_height()))
+            if self.Left and self.stamina>0:
+                if (self.rect.width!=self.SizeByWallWidth) and (self.rect.height!=self.SizeByWallHeight):
+                    self.image=Surface((self.SizeByWallWidth, self.SizeByWallHeight))
                     
                     # Обновляем  размер rect
                     self.rect=self.image.get_rect()
@@ -225,25 +281,35 @@ class Slime(sprite.Sprite):
                     self.rect.x=self.LastRectx
                     self.rect.bottom=self.LastRectbottom
                 if up:
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaWall
+                        self.CheckTimeDecrease = time.get_ticks()
                     self.moveY=-MoveSpeed
                     self.image.fill(colorS)
                     self.image.set_colorkey(Color(colorS))
                     self.PALeftUp.blit(self.image,(0,0))
                 if down:
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaWall
+                        self.CheckTimeDecrease = time.get_ticks()
                     self.moveY=+MoveSpeed
                     self.image.fill(colorS)
                     self.image.set_colorkey(Color(colorS))
                     self.PALeftDown.blit(self.image, (0, 0))
                 
                 if not(up or down):
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaWallStand
+                        self.CheckTimeDecrease = time.get_ticks()
                     self.moveY=0
                     self.image.fill(colorS)
                     self.image.set_colorkey(Color(colorS))
                     self.PAStayLeft.blit(self.image, (0, 0))
+            if self.stamina<=0:
+                self.CooldownCling=True
+
                     
 
-
-            
         if right:
             self.moveX=+MoveSpeed
             if self.onGround:
@@ -255,30 +321,42 @@ class Slime(sprite.Sprite):
                 self.image.set_colorkey(Color(colorS))
                 self.PAJump.blit(self.image, (0, 0))
 
-            if self.RightPress:
-                if (self.rect.width!=image.load('animation/slime/slimeRightUp1.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeRightUp1.png').get_height()):
-                    self.image=Surface((image.load('animation/slime/slimeRightUp1.png').get_width(), image.load('animation/slime/slimeRightUp1.png').get_height()))
+            if self.Right and self.stamina > 0:
+                if (self.rect.width!=self.SizeByWallWidth) and (self.rect.height!=self.SizeByWallHeight):
+                    self.image=Surface((self.SizeByWallWidth, self.SizeByWallHeight))
                     # Обновляем  размер rect
                     self.rect=self.image.get_rect()
                     # Устанавливаем изменённый rect по правильным координатам
                     self.rect.bottomright=(self.LastRectRight,self.LastRectbottom)
 
                 if up:
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaWall
+                        self.CheckTimeDecrease = time.get_ticks()
                     self.moveY=-MoveSpeed
                     self.image.fill(colorS)
                     self.image.set_colorkey(Color(colorS))
                     self.PARightUp.blit(self.image,(0,0))
                 if down:
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaWall
+                        self.CheckTimeDecrease = time.get_ticks()
                     self.moveY=+MoveSpeed
                     self.image.fill(colorS)
                     self.image.set_colorkey(Color(colorS))
                     self.PARightDown.blit(self.image, (0, 0))
                 
                 if not(up or down):
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaWallStand
+                        self.CheckTimeDecrease = time.get_ticks()
                     self.moveY=0
                     self.image.fill(colorS)
                     self.image.set_colorkey(Color(colorS))
                     self.PAStayRight.blit(self.image, (0, 0))
+
+            if self.stamina <= 0:
+                self.CooldownCling = True
                 
         if not(left or right):
             self.moveX=0
@@ -292,71 +370,61 @@ class Slime(sprite.Sprite):
                 self.PAJump.blit(self.image, (0, 0))
 
         if jump:
-            if self.onGround:
+            if self.onGround and self.stamina>self.DecreaseStaminaJump:
+                self.stamina-=self.DecreaseStaminaJump
                 self.moveY=-jumpPower
                 self.SoundJump.play()
         
-        # if up:
-        #     if  self.Up:
-        #         self.moveY=0
-        #         if (self.rect.width!=image.load('animation/slime/slimeStayUp.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeStayUp.png').get_height()):
-        #             self.image=Surface((image.load('animation/slime/slimeStayUp.png').get_width(), image.load('animation/slime/slimeStayUp.png').get_height()))
-        #             self.rect=self.image.get_rect()
-        #             self.rect.centerx=self.LastRectCenterx
-        #             self.rect.y=self.LastRecty
-        #         if not(left  or right):
-        #             self.moveX=0
-        #             self.image.fill((0,0,0))
-        #             self.PAStayUp.blit(self.image, (0,0))
-        #         if left:
-        #             self.moveX=-MoveSpeed
-        #             self.image.fill((0,0,0))
-        #             self.PAUpLeft.blit(self.image,(0,0))
-        #         if right:
-        #             self.moveX=MoveSpeed
-        #             self.image.fill((0, 0, 0))
-        #             self.PAUpRight.blit(self.image, (0,0))
+        if up:
+            if self.Up and self.stamina > 0:
+                self.moveY=0
+                if (self.rect.width != widthS) and (self.rect.height != heightS):
+                    self.image = Surface((widthS, heightS))
+                    self.rect=self.image.get_rect()
+                    self.rect.centerx=self.LastRectCenterx
+                    self.rect.y=self.LastRecty
+                if not(left  or right):
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaUpStand
+                        self.CheckTimeDecrease = time.get_ticks()
+                    self.moveX=0
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
+                    self.PAStayUp.blit(self.image, (0,0))
+                if left:
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaUp
+                        self.CheckTimeDecrease = time.get_ticks()
+                    self.moveX=-MoveSpeed
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
+                    self.PAUpLeft.blit(self.image,(0,0))
+                if right:
+                    if self.CurrentTime-self.CheckTimeDecrease > self.RateDecrease:
+                        self.stamina -= self.DecreaseStaminaUp
+                        self.CheckTimeDecrease = time.get_ticks()
+                    self.moveX=MoveSpeed
+                    self.image.fill(colorS)
+                    self.image.set_colorkey(Color(colorS))
+                    self.PAUpRight.blit(self.image, (0,0))
 
-
-
-        # if up:
-        #     if self.UpPress:
-        #         moveY=0
-        #         if (self.rect.width!=image.load('animation/slime/slimeStayUp.png').get_width()) and (self.rect.height!=image.load('animation/slime/slimeStayUp.png').get_height()):
-        #             self.image=Surface((image.load('animation/slime/slimeRightUp1.png').get_width(), image.load('animation/slime/slimeRightUp1.png').get_height()))
-        #             # Обновляем  размер rect
-        #             self.rect=self.image.get_rect()
-        #         # self.image=Surface((image.load('animation/slime/slimeStayUp.png').get_width(), image.load('animation/slime/slimeStayUp.png').get_height()))
-        #         # # Меняем  размер rect
-        #         # self.rect.width=45#image.load('animation/slime/slimeJump1.png').get_width() #36
-        #         # self.rect.height=24#image.load('animation/slime/slimeJump1.png').get_height() #34
-        #         # # self.rect=self.image.get_rect()
-        #         # # Устанавливаем изменённый rect по правильным координатам
-        #         self.rect.x=self.LastRectx
-        #         # if left:
-        #         #     self.rect.x=self.LastRectx
-        #         # elif right:
-        #         #     self.rect.right=self.LastRectRight
-        #         # else:
-        #         #     self.rect.x=self.LastRectx
-        #         # self.rect.x=self.LastRectx
-        #         self.rect.y=self.LastRecty
-
-        #         if left:
-        #             self.moveX=-MoveSpeed
-        #             self.image.fill((0,0,0))
-        #             self.PAUpLeft.blit(self.image,(0,0))
-        #         if right:
-        #             self.moveX=+MoveSpeed
-        #             self.image.fill((0, 0, 0))
-        #             self.PAUpRight.blit(self.image, (0, 0))
-                
-        #         if not(left or right):
-        #             self.moveY=0
-        #             self.image.fill((0, 0, 0))
-        #             self.PAStayUp.blit(self.image, (0, 0))  
-        #         print("Up")
-        # print(self.UpPress or self.LeftPress or self.RightPress)
+            
+            # Если выносливость ноль, то не можем прилипать к потолку
+            if self.stamina <= 0:
+                self.CooldownCling = True
+            # Если время запрета на восстановление выносливости не истекло, то выносливость не восстанавливается
+        if self.ForbidIncreaseTime>0:
+            self.AllowIncrease=False
+        # if right:
+        #     self.stamina+=1
+        # if left:
+        #     self.stamina-=1
+        # Выносливость изменяется в значениях от 0 до 100
+        
+        if self.stamina>100:
+            self.stamina=100
+        if self.stamina<0:
+            self.stamina=0
         #Проверка пересекается ли rect со стенами
         self.RectCheck(self.rect, platforms)
 
@@ -377,6 +445,13 @@ class Slime(sprite.Sprite):
         # Для того, чтобы можно было увидеть rect
         if  check:
             self.image.fill(('#FFFFFF'))
+        # Если есть кулдаун на прилипание, убираем все касания
+        if self.CooldownCling:
+            self.RightPress=False
+            self.Right=False
+            self.LeftPress=False
+            self.Left=False
+            self.Up=False
 
         # Обновлением точек, по которым устанавливается rect
         self.LastRectbottom = self.rect.bottom
@@ -385,6 +460,10 @@ class Slime(sprite.Sprite):
         self.LastRectRight=self.rect.right # Для  правой стены
         self.LastRectTop=self.rect.top
         self.LastRectCenterx=self.rect.centerx
+        self.LastRectCentery=self.rect.centery
+
+        # print(self.stamina)
+        # print(self.CooldownCling)
 
     # Функция обработки столкновений с препятствиями
     def collide(self,moveX,moveY,platforms,dieblocks,teleports,mon):
@@ -407,26 +486,29 @@ class Slime(sprite.Sprite):
                     # self.UpPress=True
                     self.moveY=0
                 
-            if (self.rect.right==each.rect.left):
+            if (self.rect.right==each.rect.left) and (self.rect.centery<each.rect.bottom and self.rect.centery>each.rect.top):
                 self.Right=True
-            if (self.rect.left==each.rect.right):
+                
+            if (self.rect.left == each.rect.right) and (self.rect.centery < each.rect.bottom and self.rect.centery > each.rect.top):
                 self.Left=True
-            if (self.rect.top == each.rect.bottom) and (self.rect.centerx+1>=each.rect.left  and self.rect.centerx-1<=each.rect.right):
+
+            if (self.rect.top == each.rect.bottom) and (self.rect.centerx+1>=each.rect.left and self.rect.centerx-1<=each.rect.right):
                 self.Up=True
+        
+
         for each in dieblocks:
-            if sprite.collide_rect(self,each): # если пересакаемый блок - blocks.BlockDie
+            if sprite.collide_rect(self,each): # если пересекаемый блок - blocks.BlockDie
                 self.dead = True
                 Slime.die(self)# умираем
         for each in teleports:
-            if sprite.collide_rect(self,each): # если пересакаемый блок - телепорт
+            if sprite.collide_rect(self,each): # если пересекаемый блок - телепорт
                 self.win = True
+                Slime.win(self)
         for each in mon:
-            if sprite.collide_rect(self,each): # если пересакаемый монстра
+            if sprite.collide_rect(self,each): # если пересекаемый монстра
                 self.dead=True
                 Slime.die(self)# умираем
 
-# (self.rect.centerx >= each.rect.left and self.rect.centerx <= each.rect.right)
-# ((self.rect.x<=each.rect.right and self.rect.x>=each.rect.left) or (self.rect.right<=each.rect.right and self.rect.right>=each.rect.left))
     def RectCheck(self,LastRect,platforms):
         #Если есть пересечение с платформами,  то передвигаем слайма в нужную сторону
         for each in platforms:
@@ -441,7 +523,6 @@ class Slime(sprite.Sprite):
             if each.rect.collidepoint(LastRect.x, LastRect.top+1):
                 while each.rect.collidepoint(LastRect.x, LastRect.top+1):
                     LastRect.x += 1
-                    # print("LastRect.left, LastRect.top+1")
 
             if each.rect.collidepoint(LastRect.left, LastRect.bottom-1):
                 while each.rect.collidepoint(LastRect.left, LastRect.bottom-1):
@@ -455,10 +536,6 @@ class Slime(sprite.Sprite):
                 while each.rect.collidepoint(LastRect.x, LastRect.top):
                     LastRect.y+=1
             
-            
-
-            
-                
 
             if LastRect.collidepoint(each.rect.x,each.rect.top):
                 while LastRect.collidepoint(each.rect.x,each.rect.top):

@@ -5,7 +5,7 @@ from pygame import *
 widthW = 1920  # 1000
 heightW = 1080  # 1080
 
-screen = pygame.display.set_mode((widthW, heightW), SCALED|FULLSCREEN)  # Окно игры
+screen = pygame.display.set_mode((widthW, heightW))  # Окно игры
 #настройки
 class Options:
     def __init__(self, volume,music, punkts1=[120, 140, u'Punkt1', (250, 250, 30), (250, 30, 250), 0]):

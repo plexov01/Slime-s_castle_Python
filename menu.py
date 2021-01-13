@@ -1,18 +1,19 @@
 from options import Options, punkts1
 import pygame
 from pygame import *
+import sys
 # from game import music
 
 # music = mixer.Sound("music/background_music.ogg")
 # music.play(-1)
-# #Громкость
+# # #Громкость
 # volume = 0  # 0.3
 # music.set_volume(volume)
 
 widthW = 1920  # 1000
 heightW = 1080  # 1080
 
-screen = pygame.display.set_mode((widthW, heightW), SCALED|FULLSCREEN)  # Окно игры
+screen = pygame.display.set_mode((widthW, heightW))  # Окно игры
 
 #меню
 class Menu:
