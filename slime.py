@@ -117,7 +117,19 @@ class Slime(sprite.Sprite):
         self.CurrentTime=time.get_ticks()
 
         self.CheckTimeIncrease=0 #Вспомогательная переменная, чтобы увеличивать выносливость через какой-то промежуток времени
-        self.CheckTimeDecrease=0 #Вспомогательная переменная, чтобы увеличивать выносливость через какой-то промежуток времени
+        self.CheckTimeDecrease=0 #Вспомогательная переменная, чтобы уменьшать выносливость через какой-то промежуток времени
+        # Для начисления опыта
+        self.Level=1 # Уровень слизня
+        self.SumExp=0  # Сумма всего опыта слизня
+        self.SumShowExp=0 #Вспомогательная переменная, чтобы отображать количество опыта в шкале
+        self.SumInreaseExp=0 # Сколько опыта нужно прибавить слизню
+        self.CheckTimeIncreaseExp=0 # Вспомогательная переменная, чтобы увеличивать опыт
+        self.TimeShowAdd = 0 # Время показа статичной шкалы
+        self.t_Exp=-1 # Переменная для отслеживания времени
+        self.y_Exp=0 #Начальная координата y шкалы с опытом
+
+        self.ShowScaleExp = False # Показываем шкалу в целом
+        self.ShowScaleExpCold = False  # Показываем статичную шкалу
         #Частоты увеличения и уменьшения выносливости в милисекундах(каждые сколько-то милисекунд)
         self.RateIncrease=40
         self.RateDecrease=60
@@ -146,6 +158,9 @@ class Slime(sprite.Sprite):
         self.LastRectCentery=self.rect.centery
         # Закгрузка звука прыжка
         self.SoundJump=mixer.Sound('sounds/slime/jump.wav')
+
+        # Загрузка звука поедания грибов
+        self.SoundEat=mixer.Sound("sounds/slime/eat.wav")
         
         #Функциядля созданий списка анимаций
         def MakeFrameAnim(animWay,delay):
@@ -199,7 +214,6 @@ class Slime(sprite.Sprite):
         self.rect.y = goY
 
     def die(self): #Функция для смерти
-        # time.wait(500)
         self.teleporting(self.startX, self.startY) # перемещаемся в начальные координаты
     
     def win(self):
@@ -207,7 +221,7 @@ class Slime(sprite.Sprite):
         
 
     # Функция обновления слайма при нажатии клавиш
-    def update(self,left,right,up,down,jump,platforms,check,dieblocks,teleports,mon):
+    def update(self,left,right,up,down,jump,platforms,check,dieblocks,teleports,mon,vanish):
         self.CurrentTime=time.get_ticks()
         # Проверка раз в секунду можем ли мы восстанавливать выносливость
         if self.CurrentTime-self.CheckTimeAllowIncrease>1000 and not self.AllowIncrease:
@@ -415,10 +429,54 @@ class Slime(sprite.Sprite):
             # Если время запрета на восстановление выносливости не истекло, то выносливость не восстанавливается
         if self.ForbidIncreaseTime>0:
             self.AllowIncrease=False
-        # if right:
-        #     self.stamina+=1
-        # if left:
-        #     self.stamina-=1
+        
+        
+        # Проверка каждые 25 милисекунды получил ли слизень опыт
+        if time.get_ticks()-self.CheckTimeIncreaseExp > 25:
+            self.CheckTimeIncreaseExp = time.get_ticks()
+            # Если опыт больше 2.5 то начинаем анимацию показывания шкалы с опытом
+            if self.SumInreaseExp>=2.5 :
+                self.ShowScaleExp=True
+                # добавляем милисекунды ко времени, сколько шкала будет висеть статично
+                if not (self.t_Exp>=self.TimeShowAdd+1 and self.t_Exp<=self.TimeShowAdd+3):
+                    self.TimeShowAdd+=0.030
+                # Если шкала статична добавляем опыт на шкалу
+                if self.ShowScaleExpCold:
+                    self.SumExp+=2.5
+                    self.SumInreaseExp -= 2.5
+                    self.SumShowExp+=2.5
+                if self.SumShowExp>=100:
+                    self.Level+=int(self.SumShowExp//100)
+                    self.SumShowExp -= 100*(self.SumShowExp//100)
+                    # print("level=",self.Level)
+        # Функция для определения координат шкалы
+        if self.ShowScaleExp:
+            if self.t_Exp == -1:
+                self.t_Exp = 0
+            # Шкала статична, когда нет анимации движения выползания или заползания
+            if self.t_Exp >= 1 and self.t_Exp < self.TimeShowAdd+1:
+                self.ShowScaleExpCold = True
+            else:
+                self.ShowScaleExpCold = False
+            # Если шкала статична, то y постоянна
+            if self.ShowScaleExpCold:
+                self.y_Exp = 50
+
+            if self.t_Exp < 1 and not self.ShowScaleExpCold:
+                self.y_Exp = -70*(self.t_Exp-1)**2+50
+
+            if self.t_Exp >= self.TimeShowAdd+1:
+                self.y_Exp = -70*(self.t_Exp-(self.TimeShowAdd+1))**2+50
+
+            if self.t_Exp >= 0:
+                self.t_Exp += 1/60
+            # Если закончилась анимация заползания шкалы даём знак о прекращении показа шкалы
+            if self.t_Exp > self.TimeShowAdd+3:
+                self.t_Exp = -1
+                self.ShowScaleExp = False
+                self.TimeShowAdd=0
+
+        
         # Выносливость изменяется в значениях от 0 до 100
         
         if self.stamina>100:
@@ -439,9 +497,9 @@ class Slime(sprite.Sprite):
         self.UpPress=False
         #Аналогично проделываем  результат с rect, добавляем взаимодействие rect с поверхностью
         self.rect.x+=self.moveX
-        self.collide(self.moveX,0,platforms,dieblocks,teleports,mon) #Проверка пересечения по горизонтали
+        self.collide(self.moveX,0,platforms,dieblocks,teleports,mon,vanish) #Проверка пересечения по горизонтали
         self.rect.y+=self.moveY 
-        self.collide(0,self.moveY,platforms,dieblocks,teleports,mon) #Проверка пересечения по вертикали
+        self.collide(0,self.moveY,platforms,dieblocks,teleports,mon,vanish) #Проверка пересечения по вертикали
         # Для того, чтобы можно было увидеть rect
         if  check:
             self.image.fill(('#FFFFFF'))
@@ -466,7 +524,7 @@ class Slime(sprite.Sprite):
         # print(self.CooldownCling)
 
     # Функция обработки столкновений с препятствиями
-    def collide(self,moveX,moveY,platforms,dieblocks,teleports,mon):
+    def collide(self, moveX, moveY, platforms, dieblocks, teleports, mon, vanish):
         for each in platforms:
             # Если есть столкновение
             if sprite.collide_rect(self,each):
@@ -508,6 +566,12 @@ class Slime(sprite.Sprite):
             if sprite.collide_rect(self,each): # если пересекаемый монстра
                 self.dead=True
                 Slime.die(self)# умираем
+        # Если столкнулись с исчезающим объектом, объект пропадает из исчезающих
+        for each in vanish:
+            if sprite.collide_rect(self,each):
+                self.SumInreaseExp +=10
+                self.SoundEat.play()
+                vanish.remove(each)
 
     def RectCheck(self,LastRect,platforms):
         #Если есть пересечение с платформами,  то передвигаем слайма в нужную сторону

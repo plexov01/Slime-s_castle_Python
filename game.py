@@ -10,6 +10,8 @@ import objects
 from light import Light #Импорт класса, необхдимого для создания освещения
 from menu import Menu,punkts
 from HUD import DrawScaleStamina
+from HUD import DrawScaleExperience
+from functions import Font
 # import menu
 # import options
 
@@ -58,7 +60,7 @@ textSurfaceObj = fontObj.render('Win!', True, (20,30,40))
 textRectObj = textSurfaceObj.get_rect()
 textRectObj.center = (widthW//2, heightW//2)
 deadSurFaceObj = fontObj.render('Dead!', True, (20,30,40)) 
-
+PixelText=Font('PixelWhite')
             
 # Создание меню
 Menu = Menu(volume,music,punkts)
@@ -87,43 +89,55 @@ bg_blocks = [] #Блоки заднего фона
 #Группа и массив монстров
 mon=[]
 fires=pygame.sprite.Group() #Огоньки
+# Группа грибов
+mushrooms=[]
+# Группа исчезающий элементов
+vanish=[]
 # Добавим в slime в группу спрайтов 
 animatedEntities = pygame.sprite.Group() # все анимированные объекты, за исключением героя 
 # entities.add(expl)
 monsters = pygame.sprite.Group() # Все передвигающиеся объекты
 # entities.add(expl)
 # entities.add(portal)
+portal = objects.Portal(10, 1000)
+entities.add(portal)
 #Создание пробного уровня(для отладки слайма)
 level1=[
     "----------------------------------------------------------",
     "-                                                        -",
     "-                                                        -",
     "-                                                        -",
-    "-   -             *          **       ***              $ -",
+    "-   -      66     *          **       ***              $ -",
     "--- - ----------------------------------------------------",
     "-   -    -                                               -",
     "-   -                                                    -",
-    "-   -+                                                   -",
+    "-   -+  7                                                -",
     "-   -   -                                      -         -",
     "-   -                 *                                  -",
-    "-           -        --         -                   -    -",
-    "-                        --    *     --             -    -",
-    "-     -                        -           -           - -",
-    "-            --                    -    -           -    -",
+    "-           -        --   7     -                   -    -",
+    "-                        --    *     --             -  6 -",
+    "-     -                        -        6  -        6  - -",
+    "-            --            6       -    -           -    -",
     "-++++++++++++++++++++++++++-                        -    -",
     "----------------------------                       -+    -",
     "-                                                   -    -",
     "-                                                   -    -",
-    "-                                                        -",
+    "-                                                       6-",
     "-                                                       --",
-    "-                                                        -",
+    "-                                        6           6   -",
     "-                                        -           -   -",
     "-                                        -               -",
     "-                                        -               -",
     "-                                        -               -",
-    "-                    -      -     *      -        -      -",
-    "-          -         -++++++-     -      -+++++++++++++++-",
-    "----------------------------------------------------------"]
+    "-          6         -      -     *      -        -      -",
+    "-   77     -  66     -++++++- 666 -  7   -+++++++++++++++-",
+    "---------------------------------------  -----------------",
+    "-                                   -               -    -",
+    "-                                    -                   -",
+    "-                                     -------- -----------",
+    "-                                                        -",
+    "-                                                   -    -",
+    "----------------------------------------------------------", ]
 
 
 # #Координаты для отрисовки пробного уровня
@@ -164,9 +178,21 @@ for line in level1:
             teleports.append(pf)
             bg = blocks.Background(x,y)
             bg_blocks.append(bg)
-        else:
-            bg = blocks.Background(x,y)
-            bg_blocks.append(bg)
+        elif col=='6':
+            pf=objects.Mushroom(x+12.5,y+25)
+            mushrooms.append(pf)
+            vanish.append(pf)
+            # entities.add(pf)
+        elif col=='7':
+            pf=objects.Mushroom(x,y,"image/mushroom.png")
+            mushrooms.append(pf)
+            vanish.append(pf)
+            # entities.add(pf)
+        # else:
+        #     bg = blocks.Background(x,y)
+        #     bg_blocks.append(bg)
+        bg = blocks.Background(x, y)
+        bg_blocks.append(bg)
         x += 50
     y += 50
     x = 0
@@ -175,44 +201,13 @@ mn = enemies.Monster(760, 1324, 1.3, 0.2, 150, 6)  # Создаем монстр
 entities.add(mn)
 monsters.add(mn)
 mon.append(mn)
-
+# entities.add(portal)
 TrueScroll=[0,0]
-# # Класс для динамической камеры
-# class  Camera:
-#     def  __init__(self,cameraF,width,height):
-#         self.cameraF=cameraF
-#         self.levelRect=Rect(0,0,width,height)
-
-#     def apply(self, target):
-#         # print(target.rect.move(self.levelRect.topleft))
-#         return target.rect.move(self.levelRect.topleft)
-
-#     def update(self, target):
-#         self.levelRect=self.cameraF(self.levelRect, target.rect)
-            
-        
-
-# #Функция для камеры, которая будет отслеживать положение игрока
-# def cameraF(camera, TargetRect):
-#     #Определение координат  динамической камеры
-#     l=-TargetRect.x+widthW/2
-#     t=-TargetRect.y+heightW/2
-    
-#     # # Для того, чтобы игрок не видел, что происходит за стенами уровня
-#     # l=min(0,l)
-#     # l=max(-(camera.width-widthW),l)
-
-#     # t=max(-(camera.height-heightW),t)
-#     # t=min(0,t)
-#     # print(camera.width, ' ', camera.height)
-#     return Rect(l, t, camera.width, camera.height)
 
 
 # #Длина и ширина всего  уровня
 # TotalWidth = len(level1[0])*50
 # TotalHeight = len(level1)*50
-# # Создаю  объект класса камера, для слежения за игроком
-# # camera=Camera(cameraF,TotalWidth,TotalHeight)
 
 # LightMap=Light(1920,1080)
 # LightSlime = pygame.Surface((widthW,heightW))
@@ -234,25 +229,12 @@ TrueScroll=[0,0]
 # LightSlime.blit(LightMap.MakeLight(), (0, 0), special_flags=BLEND_RGBA_SUB)
 CheckTime = 0
 showtext = 0
+# mushroom=objects.Mushroom(100,1300)
 #Цикл игры
 running=True
 while running:
     # держим цикл на правильной скорости
     clock.tick(FPS)
-
-    # second=time.get_ticks()/1000
-    # # second2=time.get_ticks()//1000+1
-    # secendMES=0
-    # if time.get_ticks()/1000>secondMes:
-
-
-
-    # if second+1>time.get_ticks()//1000:
-    #     second2=second//1000
-    #     print(second,' ',second2)
-    # # print(Second)
-
-    
 
     # Очищаю экран от предыдущего освещённого кадра
     # LightMap.Clear()
@@ -293,34 +275,34 @@ while running:
         #Для включения/выключения режима разработчика во время игры
         if event.type==KEYDOWN and event.key==K_F1:
             CHECK=True
+            # ShowScaleExp = True
+            # FPS=30
         if event.type==KEYDOWN and event.key==K_F2:
             CHECK=False
+            FPS=60
 
     #Заливка заднего фона чёрным цветом
     screen.fill(("#000000"))
     
 
-
+    # portal.update()
     
-    slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports,mon) #Для передвижения  и взаимодействия с игрой
+    slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports,mon,vanish) #Для передвижения  и взаимодействия с игрой
     # Для параллакса
     TrueScroll[0] += int((slime.rect.centerx - widthW/2 - TrueScroll[0]))
     TrueScroll[1] += int((slime.rect.centery - heightW/2- TrueScroll[1]))
     scroll=TrueScroll.copy()
-    # scroll
-    # print(time.get_ticks(), ' ', slime.CurrentTime)
+
     monsters.update() #Рисуем монстра
     fires.update() #Рисуем огниd
-
-    #Добавляю слайма в цель отслеживания камеры  
-    # camera.update(slime)
     
+   
 
-    # # Левые верхние координаты экрана
+    # Левые верхние координаты экрана
     WindowRectx = slime.rect.x-widthW/2
     WindowRecty = slime.rect.y-heightW/2
-    # # Rect экрана(видимой игроку области)
-    # WindowRect = Rect(WindowRectx, WindowRecty, widthW,heightW)
+    # Rect экрана(видимой игроку области)
+    WindowRect = Rect(WindowRectx, WindowRecty, widthW,heightW)
 
     # Прорисовка текстур
     for e in bg_blocks:
@@ -331,13 +313,10 @@ while running:
         if (e.rect.right > WindowRectx and (e.rect.left-15< (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
             screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
 
-        # if (e.rect.right-500>WindowRectx and (e.rect.left+500<(WindowRectx+widthW))) and(e.rect.top+250<(WindowRecty+heightW) and e.rect.bottom-250>WindowRecty):
-        #     screen.blit(e.image, camera.apply(e))
-
         # if WindowRect.colliderect(e):
-        #     screen.blit(e.image, camera.apply(e))
+        #     screen.blit(e.image, (e.rect.x-TrueScroll[0], e.rect.y-TrueScroll[1]))
 
-        # screen.blit(e.image, camera.apply(e))
+        # screen.blit(e.image, (e.rect.x-TrueScroll[0], e.rect.y-TrueScroll[1]))
 
     #Отрисовываю все спрайты в области камеры
     for e in entities:
@@ -347,19 +326,24 @@ while running:
         if (e.rect.right > WindowRectx and (e.rect.left-15< (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
             screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
 
-        # if (e.rect.right-500>WindowRectx and (e.rect.left+500<(WindowRectx+widthW))) and(e.rect.top+250<(WindowRecty+heightW) and e.rect.bottom-250>WindowRecty):
-        #     screen.blit(e.image, camera.apply(e))
+       # if WindowRect.colliderect(e):
+        #     screen.blit(e.image, (e.rect.x-TrueScroll[0], e.rect.y-TrueScroll[1]))
 
-        # if WindowRect.colliderect(e):
-        #     screen.blit(e.image, camera.apply(e))
-
-        # screen.blit(e.image, camera.apply(e))
-    
+        # screen.blit(e.image, (e.rect.x-TrueScroll[0], e.rect.y-TrueScroll[1]))
+    # Отрисовка элементов, которые могут исчезать(грибы)
+    for e in vanish:
         
+        if (e.rect.right > WindowRectx and (e.rect.left-15< (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
+            screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
 
-    
+    # Отрисовка HUD
     DrawScaleStamina(screen,widthW*0.6,heightW*0.9,slime.stamina)
+    
+    if slime.ShowScaleExp:
+        DrawScaleExperience(screen, widthW*0.3, slime.y_Exp, slime.SumShowExp)
+        PixelText.render(screen, 'Level '+str(slime.Level), (widthW*0.3,slime.y_Exp-20))
 
+    # portal.update()
     
     # Условия выигрыша и победы
     if slime.dead:
