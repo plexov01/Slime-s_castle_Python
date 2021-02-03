@@ -140,6 +140,10 @@ class Slime(sprite.Sprite):
         #Время в милисекундах сколько слизень не сможет прилипать к стенам, после полного исчерпания выносливости
         self.CooldownClingTime=1000
 
+        # Для итогового окна после уровня
+        self.StartLevelTime = time.get_ticks()
+        self.LevelTime=0
+
         #Для создания победного окна
         self.win = False
         #Для смерти
@@ -519,7 +523,7 @@ class Slime(sprite.Sprite):
         self.LastRectTop=self.rect.top
         self.LastRectCenterx=self.rect.centerx
         self.LastRectCentery=self.rect.centery
-
+        # print(self.LevelTime,' ',self.StartLevelTime)
         # print(self.stamina)
         # print(self.CooldownCling)
 
@@ -562,6 +566,8 @@ class Slime(sprite.Sprite):
             if sprite.collide_rect(self,each): # если пересекаемый блок - телепорт
                 self.win = True
                 Slime.win(self)
+                self.LevelTime=time.get_ticks()-self.StartLevelTime
+                self.StartLevelTime=time.get_ticks()
         for each in mon:
             if sprite.collide_rect(self,each): # если пересекаемый монстра
                 self.dead=True

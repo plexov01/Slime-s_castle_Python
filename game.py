@@ -1,17 +1,17 @@
 # Frozen Jam by tgfcoder <https://twitter.com/tgfcoder> licensed under CC-BY-3 <http://creativecommons.org/licenses/by/3.0/>
-import pygame
 import sys
-import enemies  # Импорт кода для монстра
+import pygame
 # import fire #Импорт кода для огня
-from pygame import * #Строчка,  чтобы каждый  раз не писать pygame
-import slime #импорт кода, относящегося к слайму из другого файла
-import blocks #импорт кода, относящегося к описанию стен
+from pygame import *  # Строчка,  чтобы каждый  раз не писать pygame
+import blocks  # импорт кода, относящегося к описанию стен
+import enemies  # Импорт кода для монстра
 import objects
-from light import Light #Импорт класса, необхдимого для создания освещения
-from menu import Menu,punkts
-from HUD import DrawScaleStamina
-from HUD import DrawScaleExperience
-from functions import Font
+import slime  # импорт кода, относящегося к слайму из другого файла
+from functions import Font, FinishLevel, DeadSlime
+from HUD import DrawScaleExperience, DrawScaleStamina
+from light import Light  # Импорт класса, необхдимого для создания освещения
+from menu import Menu, punkts
+
 # import menu
 # import options
 
@@ -55,12 +55,15 @@ pygame.display.set_icon(pygame.image.load("image/icon/icon_slime.ico"))
 clock=pygame.time.Clock()
 StartTime=time.get_ticks()
 #Текст победы/проигрыша
-fontObj = pygame.font.Font('freesansbold.ttf', 50)
-textSurfaceObj = fontObj.render('Win!', True, (20,30,40))
-textRectObj = textSurfaceObj.get_rect()
-textRectObj.center = (widthW//2, heightW//2)
-deadSurFaceObj = fontObj.render('Dead!', True, (20,30,40)) 
-PixelText=Font('PixelWhite')
+# fontObj = pygame.font.Font('freesansbold.ttf', 50)
+# textSurfaceObj = fontObj.render('Win!', True, (20,30,40))
+# textRectObj = textSurfaceObj.get_rect()
+# textRectObj.center = (widthW//2, heightW//2)
+# deadSurFaceObj = fontObj.render('Dead!', True, (20,30,40))
+
+PixelWhiteText = [0,Font('PixelWhite'), Font('PixelWhite', 2), Font('PixelWhite', 3), Font('PixelWhite', 4)] 
+PixelWhiteText[0]=len(PixelWhiteText)
+
             
 # Создание меню
 Menu = Menu(volume,music,punkts)
@@ -230,6 +233,7 @@ TrueScroll=[0,0]
 CheckTime = 0
 showtext = 0
 # mushroom=objects.Mushroom(100,1300)
+slime.StartLevelTime=time.get_ticks()
 #Цикл игры
 running=True
 while running:
@@ -341,46 +345,17 @@ while running:
     
     if slime.ShowScaleExp:
         DrawScaleExperience(screen, widthW*0.3, slime.y_Exp, slime.SumShowExp)
-        PixelText.render(screen, 'Level '+str(slime.Level), (widthW*0.3,slime.y_Exp-20))
+        PixelWhiteText[1].render(screen, 'Level '+str(slime.Level), (widthW*0.3,slime.y_Exp-20))
 
     # portal.update()
     
     # Условия выигрыша и победы
     if slime.dead:
-
-        done = True
-        showtext = 2000
-
-        while done:
-            screen.fill((123, 132, 55))
-            screen.blit(deadSurFaceObj, textRectObj)
-            pygame.display.update()
-            if time.get_ticks()-CheckTime > 1000:
-                showtext -= 1000
-                CheckTime = time.get_ticks()
-
-            if showtext <= 0:
-                showtext = 0
-                done = False
-        slime.dead = False
+        DeadSlime(screen,slime,PixelWhiteText)
     
     if slime.win:
-
-        done = True
-        showtext = 2000
-
-        while done:
-            screen.fill((123, 132, 55))
-            screen.blit(textSurfaceObj, textRectObj)
-            pygame.display.update()
-            if time.get_ticks()-CheckTime > 1000:
-                showtext -= 500
-                CheckTime = time.get_ticks()
-
-            if showtext <= 0:
-                showtext = 0
-                done = False
-        slime.win = False
+        FinishLevel(screen,slime,PixelWhiteText)
+    
 
     #display.update нужен для однократного показа всего, что нарисовано на экране за 1 кадр
     pygame.display.update()
