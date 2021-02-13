@@ -61,7 +61,7 @@ class Menu:
                 if c.type == pygame.MOUSEBUTTONDOWN and c.button == 1:
                     if punkt == 1:
                         done == False
-                        CreatedOptions = Options(self.volume, punkts1)
+                        CreatedOptions = Options(self.volume, self.music, punkts1)
                         CreatedOptions.OptionsProcessing()
                     if punkt == 0:
                         done = False

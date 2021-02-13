@@ -1,8 +1,8 @@
 # Frozen Jam by tgfcoder <https://twitter.com/tgfcoder> licensed under CC-BY-3 <http://creativecommons.org/licenses/by/3.0/>
 import sys
-import pygame
+import pygame, time
 # import fire #Импорт кода для огня
-from pygame import *  # Строчка,  чтобы каждый  раз не писать pygame
+from pygame.locals import *  # Строчка,  чтобы каждый  раз не писать pygame
 import blocks  # импорт кода, относящегося к описанию стен
 import enemies  # Импорт кода для монстра
 import objects
@@ -19,10 +19,10 @@ from menu import Menu, punkts
 # импорт mixer для  звука
 # from pygame import mixer
 # Настройка звука
-mixer.pre_init(44100,-16,2,512)
-mixer.init()
+pygame.mixer.pre_init(44100, -16, 2, 512)
+pygame.mixer.init()
 #загрузка воспроизведения на  фоне
-music = mixer.Sound("music/background_music.ogg")
+music = pygame.mixer.Sound("music/background_music.ogg")
 music.play(-1)
 #Громкость
 volume=0#0.3
@@ -53,7 +53,7 @@ pygame.display.set_caption("Slime's castle")
 pygame.display.set_icon(pygame.image.load("image/icon/icon_slime.ico"))
 #Clock нужен для того, чтобы убедиться, что игра работает с заданной частотой кадров
 clock=pygame.time.Clock()
-StartTime=time.get_ticks()
+StartTime=pygame.time.get_ticks()
 #Текст победы/проигрыша
 # fontObj = pygame.font.Font('freesansbold.ttf', 50)
 # textSurfaceObj = fontObj.render('Win!', True, (20,30,40))
@@ -207,6 +207,7 @@ mon.append(mn)
 # entities.add(portal)
 TrueScroll=[0,0]
 
+WindowRect = Rect(0, 0, widthW, heightW)
 
 # #Длина и ширина всего  уровня
 # TotalWidth = len(level1[0])*50
@@ -233,13 +234,22 @@ TrueScroll=[0,0]
 CheckTime = 0
 showtext = 0
 # mushroom=objects.Mushroom(100,1300)
-slime.StartLevelTime=time.get_ticks()
+slime.StartLevelTime=pygame.time.get_ticks()
+last_time=time.time()
 #Цикл игры
 running=True
 while running:
     # держим цикл на правильной скорости
+    
     clock.tick(FPS)
+    # if time.get()-
+    dt = time.time()-last_time
+    # dt *= 60
+    last_time = time.time()
 
+    # if dt!=0:
+    #     PixelWhiteText[4].render(screen, str(round(1000/dt)), (100,100))
+        # print(round(1000/dt))
     # Очищаю экран от предыдущего освещённого кадра
     # LightMap.Clear()
     #Цикл для обработки нажатых клавиш игроком
@@ -280,33 +290,44 @@ while running:
         if event.type==KEYDOWN and event.key==K_F1:
             CHECK=True
             # ShowScaleExp = True
-            # FPS=30
+            FPS=600
         if event.type==KEYDOWN and event.key==K_F2:
             CHECK=False
             FPS=60
 
     #Заливка заднего фона чёрным цветом
     screen.fill(("#000000"))
-    
+
 
     # portal.update()
     
     slime.update(left,right,up,down,jump,platforms,CHECK,dieblocks,teleports,mon,vanish) #Для передвижения  и взаимодействия с игрой
     # Для параллакса
-    TrueScroll[0] += int((slime.rect.centerx - widthW/2 - TrueScroll[0]))
-    TrueScroll[1] += int((slime.rect.centery - heightW/2- TrueScroll[1]))
+    TrueScroll[0] += int((slime.rect.centerx - widthW/2 - TrueScroll[0]))//2
+    TrueScroll[1] += int((slime.rect.centery - heightW/2- TrueScroll[1]))//2
     scroll=TrueScroll.copy()
-
-    monsters.update() #Рисуем монстра
-    fires.update() #Рисуем огниd
+    
     
    
 
     # Левые верхние координаты экрана
-    WindowRectx = slime.rect.x-widthW/2
-    WindowRecty = slime.rect.y-heightW/2
+    WindowRect.x = slime.rect.x-widthW/2
+    WindowRect.y = slime.rect.y-heightW/2
     # Rect экрана(видимой игроку области)
-    WindowRect = Rect(WindowRectx, WindowRecty, widthW,heightW)
+    # WindowRect = Rect(WindowRectx, WindowRecty, widthW,heightW)
+
+    for e in monsters:
+        if (e.rect.right > WindowRect.x and (e.rect.left-15 < (WindowRect.x+widthW))) and (e.rect.top-10 <= (WindowRect.y+heightW) and e.rect.bottom >= WindowRect.y):
+            monsters.update()  # Рисуем монстра
+
+    for e in fires:
+        if (e.rect.right > WindowRect.x and (e.rect.left-15 < (WindowRect.x+widthW))) and (e.rect.top-10 <= (WindowRect.y+heightW) and e.rect.bottom >= WindowRect.y):
+            fires.update()  # Рисуем монстра
+            # print('---')
+
+    # if (e.rect.right > WindowRectx and (e.rect.left-15 < (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
+    #     monsters.update() #Рисуем монстра
+    #     fires.update() #Рисуем огниd
 
     # Прорисовка текстур
     for e in bg_blocks:
@@ -314,7 +335,7 @@ while running:
         # if ((e.rect.x-slime.rect.centerx)**2+(e.rect.y-slime.rect.centery)**2 < (250**2)):
         #     screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
 
-        if (e.rect.right > WindowRectx and (e.rect.left-15< (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
+        if (e.rect.right > WindowRect.x and (e.rect.left-15< (WindowRect.x+widthW))) and (e.rect.top-10 <= (WindowRect.y+heightW) and e.rect.bottom >= WindowRect.y):
             screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
 
         # if WindowRect.colliderect(e):
@@ -327,8 +348,9 @@ while running:
         # if ((e.rect.x-slime.rect.centerx)**2+(e.rect.y-slime.rect.centery)**2 < (450**2)):
         #     screen.blit(e.image, (e.rect.x-TrueScroll[0], e.rect.y-TrueScroll[1]))
         
-        if (e.rect.right > WindowRectx and (e.rect.left-15< (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
+        if (e.rect.right > WindowRect.x and (e.rect.left-15< (WindowRect.x+widthW))) and (e.rect.top-10 <= (WindowRect.y+heightW) and e.rect.bottom >= WindowRect.y):
             screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
+
 
        # if WindowRect.colliderect(e):
         #     screen.blit(e.image, (e.rect.x-TrueScroll[0], e.rect.y-TrueScroll[1]))
@@ -337,15 +359,21 @@ while running:
     # Отрисовка элементов, которые могут исчезать(грибы)
     for e in vanish:
         
-        if (e.rect.right > WindowRectx and (e.rect.left-15< (WindowRectx+widthW))) and (e.rect.top-10 <= (WindowRecty+heightW) and e.rect.bottom >= WindowRecty):
+        if (e.rect.right > WindowRect.x and (e.rect.left-15< (WindowRect.x+widthW))) and (e.rect.top-10 <= (WindowRect.y+heightW) and e.rect.bottom >= WindowRect.y):
             screen.blit(e.image, (e.rect.x-TrueScroll[0],e.rect.y-TrueScroll[1]))
 
+
+# ,'{','}','#','А','Б','В'
+
+    # Проверка шрифта
+    # PixelWhiteText[1].render(screen, 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z . - \' : + ! ? 0 1 2 3 4 5 6 7 8 9 ( ) / _ = \\ [ ] * " < > ; { } #',(10,10))
+    # PixelWhiteText[1].render(screen, 'А Б В Г Д Е Ё Ж З И Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я а б в г д е ё ж з и й к л м н о п р с т у ф х ц ч ш щ ъ ы ь э ю я',(10,40))
     # Отрисовка HUD
     DrawScaleStamina(screen,widthW*0.6,heightW*0.9,slime.stamina)
     
     if slime.ShowScaleExp:
         DrawScaleExperience(screen, widthW*0.3, slime.y_Exp, slime.SumShowExp)
-        PixelWhiteText[1].render(screen, 'Level '+str(slime.Level), (widthW*0.3,slime.y_Exp-20))
+        PixelWhiteText[1].render(screen, 'Level '+str(slime.Level), (widthW*0.3,slime.y_Exp-24))
 
     # portal.update()
     
@@ -355,10 +383,14 @@ while running:
     
     if slime.win:
         FinishLevel(screen,slime,PixelWhiteText)
-    
 
+    if pygame.time.get_ticks() - CheckTime >250:
+        CheckTime = pygame.time.get_ticks()
+        dt1=dt
+    if dt1 != 0 and CHECK:
+        PixelWhiteText[2].render(screen, str(int(1/dt1+0.5)), (widthW-65, 0))
     #display.update нужен для однократного показа всего, что нарисовано на экране за 1 кадр
-    pygame.display.update()
+    pygame.display.flip()  # pygame.display.flip()
     
 #При завершении цикла игры окно игры закрывается
 pygame.quit()

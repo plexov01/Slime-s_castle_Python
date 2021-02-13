@@ -63,13 +63,6 @@ class Portal(sprite.Sprite):
         # self.PAPortal=MakeFrameAnim(AnPortal,AnPortalDelay)
         # self.PAPortal.play()
 
-        self.PAPortal=MakeFrameAnim(AnPortal,AnPortalDelay)
-        self.PAPortal.play()
-    def update(self):
-        # self.image.fill((0, 0, 0))
-        # self.PAPortal.blit(self.image, (0, 0))
-        self.image.fill(Color("#FFFFFF"))
-        self.PAPortal.blit(self.image, (0, 0))
 
 
 class Mushroom(sprite.Sprite):
@@ -144,5 +137,4 @@ class Fire(sprite.Sprite):
 
     def update(self):
         self.image.fill(Color(FIRE_COLOR))
-        self.fireAnim.blit(self.image, (0, 0))
-    
+        self.fireAnim.blit(self.image, (0, 0))   
